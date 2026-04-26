@@ -1,0 +1,49 @@
+{
+  "name": "Windson Personal Trainer",
+  "short_name": "Windson PT",
+  "description": "Sistema de gestão para Personal Trainer Windson — avaliação postural, treinos, clientes e agenda.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#D4AF37",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["fitness", "health", "productivity"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Avaliação Postural",
+      "short_name": "Avaliação",
+      "description": "Abrir avaliação postural por IA",
+      "url": "./index.html#avaliacao",
+      "icons": [{ "src": "icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Agenda",
+      "short_name": "Agenda",
+      "description": "Ver agenda de sessões",
+      "url": "./index.html#agenda",
+      "icons": [{ "src": "icon.svg", "sizes": "any" }]
+    }
+  ]
+}

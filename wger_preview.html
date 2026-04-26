@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Biblioteca wger — Preview Windson PT</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:#080808;color:#F0E8CC;font-family:'Sora',sans-serif;min-height:100vh;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:#111;}
+::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:2px;}
+.filter-btn{background:rgba(255,255,255,0.05);color:#888;border:1px solid rgba(255,255,255,0.08);transition:all .2s;}
+.filter-btn:hover{background:rgba(212,175,55,0.1);color:#D4AF37;border-color:rgba(212,175,55,0.25);}
+.filter-btn.active{background:rgba(212,175,55,0.2)!important;color:#F0C040!important;border:1px solid rgba(212,175,55,0.45)!important;font-weight:700!important;}
+.ex-card{background:#111;border:1px solid rgba(212,175,55,0.1);transition:border-color .2s,transform .15s;}
+.ex-card:active{transform:scale(0.98);}
+.ex-card:hover{border-color:rgba(212,175,55,0.32);}
+.spinner{border:2px solid rgba(212,175,55,0.15);border-top-color:#D4AF37;border-radius:50%;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.gold-tag{background:rgba(212,175,55,0.12);color:#D4AF37;border:1px solid rgba(212,175,55,0.25);}
+.secondary-tag{background:rgba(255,255,255,0.04);color:#666;}
+.modal-bg{background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════ -->
+<header class="fixed top-0 left-0 right-0 z-50 flex items-center gap-3 px-4 py-3" style="background:#080808;border-bottom:1px solid rgba(212,175,55,0.12);">
+  <div class="w-9 h-9 shrink-0">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <defs>
+        <linearGradient id="wg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#F5D060"/>
+          <stop offset="50%" stop-color="#D4AF37"/>
+          <stop offset="100%" stop-color="#8B6914"/>
+        </linearGradient>
+      </defs>
+      <path d="M48,80 L130,430 L192,240 L256,330 L320,240 L382,430 L464,80 L426,80 L344,390 L282,200 L256,260 L230,200 L168,390 L86,80 Z" fill="url(#wg)"/>
+    </svg>
+  </div>
+  <div class="flex-1 min-w-0">
+    <p class="font-bold text-sm leading-tight" style="color:#F0C040;">Biblioteca de Exercícios</p>
+    <p class="text-xs" style="color:#555;">wger.de · Preview Windson PT</p>
+  </div>
+  <div id="header-badge" class="hidden px-2 py-1 rounded-lg text-xs font-bold" style="background:rgba(212,175,55,0.12);color:#D4AF37;"></div>
+</header>
+
+<!-- ══ SEARCH + FILTROS ════════════════════════════════ -->
+<div class="fixed top-14 left-0 right-0 z-40 px-4 pt-3 pb-2" style="background:#080808;border-bottom:1px solid rgba(255,255,255,0.04);">
+  <div class="relative w-full mb-3">
+    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:#555;font-size:18px;">search</span>
+    <input id="search-input" type="text" placeholder="Buscar exercício em inglês..."
+      oninput="onSearch(this.value)"
+      class="w-full rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none"
+      style="background:#111;border:1px solid rgba(255,255,255,0.07);color:#F0E8CC;"/>
+  </div>
+  <div id="cat-filters" class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" style="scrollbar-width:none;">
+    <div class="w-20 h-7 rounded-full spinner shrink-0 opacity-30"></div>
+    <div class="w-16 h-7 rounded-full spinner shrink-0 opacity-20"></div>
+    <div class="w-24 h-7 rounded-full spinner shrink-0 opacity-15"></div>
+  </div>
+</div>
+
+<!-- ══ LISTA ═══════════════════════════════════════════ -->
+<main class="pt-40 pb-10 px-4 max-w-2xl mx-auto">
+  <div id="ex-list" class="flex flex-col gap-3">
+    <!-- preenchido por JS -->
+  </div>
+</main>
+
+<!-- ══ MODAL ═══════════════════════════════════════════ -->
+<div id="modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-end sm:items-center justify-center" onclick="handleModalBg(event)">
+  <div id="modal-panel" class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl overflow-y-auto relative"
+       style="background:#0F0F0F;border:1px solid rgba(212,175,55,0.18);max-height:92vh;">
+    <div id="modal-body" class="p-5">
+      <div class="flex justify-center py-10"><div class="w-8 h-8 spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://wger.de/api/v2';
+const LANG = 2; // English — most complete
+let _cats = [];
+let _curCat = null;
+let _searchTimer;
+let _cache = {};
+
+// ── Bootstrap ──────────────────────────────────────────
+async function init() {
+  // Detecta abertura via file:// e avisa
+  if (location.protocol === 'file:') {
+    document.getElementById('cat-filters').innerHTML =
+      '<p class="text-xs py-2" style="color:#D4AF37;">⚠ Abra via servidor local: <code style="color:#F0C040;">python -m http.server 8080</code> → localhost:8080/wger_preview.html</p>';
+    document.getElementById('ex-list').innerHTML =
+      '<div class="rounded-2xl p-5 mt-2" style="background:#111;border:1px solid rgba(212,175,55,0.2);">'
+      + '<p class="font-bold text-sm mb-2" style="color:#F0C040;">Como abrir corretamente</p>'
+      + '<p class="text-xs mb-3" style="color:#888;">O browser bloqueia requests externos em arquivos locais (CORS). Rode no terminal:</p>'
+      + '<code class="block text-xs p-3 rounded-xl mb-2" style="background:#0A0A0A;color:#D4AF37;">cd "C:\\Users\\gutow\\OneDrive\\Desktop\\windson_pwa"</code>'
+      + '<code class="block text-xs p-3 rounded-xl" style="background:#0A0A0A;color:#D4AF37;">python -m http.server 8080</code>'
+      + '<p class="text-xs mt-3" style="color:#666;">Depois acesse: <span style="color:#D4AF37;">http://localhost:8080/wger_preview.html</span></p>'
+      + '</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/exercisecategory/?format=json`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    _cats = data.results;
+    renderFilters(_cats);
+    if (_cats.length) selectCat(_cats[0]);
+  } catch(e) {
+    document.getElementById('cat-filters').innerHTML =
+      '<p class="text-xs py-2" style="color:#888;">Erro: ' + e.message + '</p>';
+    document.getElementById('ex-list').innerHTML =
+      '<p class="text-xs text-center py-8" style="color:#555;">Falha ao conectar com wger.de — ' + e.message + '</p>';
+  }
+}
+
+// ── Filtros ─────────────────────────────────────────────
+function renderFilters(cats) {
+  document.getElementById('cat-filters').innerHTML = cats.map(c =>
+    `<button id="catbtn-${c.id}" onclick="selectCat(${JSON.stringify(c)})"
+      class="filter-btn px-3 py-1.5 rounded-full text-xs whitespace-nowrap">${c.name}</button>`
+  ).join('');
+}
+
+function selectCat(cat) {
+  _curCat = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('catbtn-' + cat.id);
+  if (btn) btn.classList.add('active');
+  document.getElementById('search-input').value = '';
+  loadExercises({ category: cat.id });
+}
+
+// ── Search ──────────────────────────────────────────────
+function onSearch(val) {
+  clearTimeout(_searchTimer);
+  if (!val.trim()) {
+    if (_curCat) selectCat(_curCat);
+    return;
+  }
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  _searchTimer = setTimeout(() => loadExercises({ search: val.trim() }), 600);
+}
+
+// ── Loader ──────────────────────────────────────────────
+function showSpinner() {
+  document.getElementById('ex-list').innerHTML =
+    '<div class="flex flex-col items-center gap-3 py-16">'
+    + '<div class="w-9 h-9 spinner"></div>'
+    + '<p class="text-xs" style="color:#555;">Carregando exercícios...</p></div>';
+}
+
+async function loadExercises({ category, search } = {}) {
+  showSpinner();
+  const cacheKey = category ? 'cat_' + category : 'search_' + search;
+  if (_cache[cacheKey]) { renderCards(_cache[cacheKey]); return; }
+
+  let url = `${API}/exercise/?format=json&language=${LANG}&limit=20&offset=0`;
+  if (category) url += `&category=${category}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    let exercises = (await res.json()).results;
+
+    // Client-side search filter
+    if (search) {
+      const q = search.toLowerCase();
+      exercises = exercises.filter(e => e.name.toLowerCase().includes(q));
+      if (!exercises.length) {
+        // Try fetching all and filtering (for better search coverage)
+        const all = await fetch(`${API}/exercise/?format=json&language=${LANG}&limit=100&offset=0`);
+        const allData = await all.json();
+        exercises = allData.results.filter(e => e.name.toLowerCase().includes(q)).slice(0, 20);
+      }
+    }
+
+    _cache[cacheKey] = exercises;
+    renderCards(exercises);
+
+    // Update badge
+    const badge = document.getElementById('header-badge');
+    badge.textContent = exercises.length + ' exercícios';
+    badge.classList.remove('hidden');
+  } catch(e) {
+    document.getElementById('ex-list').innerHTML =
+      '<div class="flex flex-col items-center gap-3 py-12">'
+      + '<p class="text-xs text-center" style="color:#888;">Erro ao carregar: ' + e.message + '</p>'
+      + '<button onclick="loadExercises(' + JSON.stringify(category ? {category} : {search}) + ')" '
+      + 'class="px-4 py-2 rounded-xl text-xs font-bold" style="background:rgba(212,175,55,0.15);color:#D4AF37;border:1px solid rgba(212,175,55,0.3);">Tentar novamente</button>'
+      + '</div>';
+  }
+}
+
+// ── Render Cards ────────────────────────────────────────
+function renderCards(exercises) {
+  const list = document.getElementById('ex-list');
+  if (!exercises.length) {
+    list.innerHTML = '<p class="text-center py-12 text-sm" style="color:#555;">Nenhum exercício encontrado.</p>';
+    return;
+  }
+
+  list.innerHTML = exercises.map(ex => {
+    const muscles = ex.muscles?.map(m => m.name_en).join(', ') || '';
+    return `<div id="card-${ex.id}" class="ex-card rounded-2xl p-3 flex items-center gap-3 cursor-pointer" onclick="openModal(${ex.exercise_base}, ${ex.id})">
+      <div id="img-${ex.id}" class="shrink-0 rounded-xl overflow-hidden flex items-center justify-center" style="width:72px;height:72px;min-width:72px;background:#0A0A0A;">
+        <div class="w-6 h-6 spinner"></div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-sm leading-tight truncate" style="color:#F0E8CC;">${ex.name}</p>
+        <p class="text-xs mt-0.5" style="color:#D4AF37;">${ex.category?.name || ''}</p>
+        ${muscles ? `<p class="text-xs mt-0.5 truncate" style="color:#555;">${muscles}</p>` : ''}
+      </div>
+      <span class="material-symbols-outlined shrink-0" style="color:#333;font-size:20px;">chevron_right</span>
+    </div>`;
+  }).join('');
+
+  // Carrega imagens em paralelo com pequeno escalonamento
+  exercises.forEach((ex, i) => {
+    setTimeout(() => loadCardImage(ex.exercise_base, ex.id), i * 150);
+  });
+}
+
+async function loadCardImage(baseId, exId) {
+  try {
+    const res = await fetch(`${API}/exerciseimage/?format=json&exercise_base=${baseId}&limit=1`);
+    const data = await res.json();
+    const el = document.getElementById('img-' + exId);
+    if (!el) return;
+    if (data.results?.length) {
+      el.innerHTML = `<img src="${data.results[0].image}" alt=""
+        class="w-full h-full object-cover"
+        onerror="this.parentElement.innerHTML='<span class=\'material-symbols-outlined\' style=\'color:#2A2A2A;font-size:26px;\'>fitness_center</span>'"/>`;
+    } else {
+      el.innerHTML = '<span class="material-symbols-outlined" style="color:#2A2A2A;font-size:26px;">fitness_center</span>';
+    }
+  } catch {
+    const el = document.getElementById('img-' + exId);
+    if (el) el.innerHTML = '<span class="material-symbols-outlined" style="color:#2A2A2A;font-size:26px;">fitness_center</span>';
+  }
+}
+
+// ── Modal ───────────────────────────────────────────────
+async function openModal(baseId, exId) {
+  const modal = document.getElementById('modal');
+  const body  = document.getElementById('modal-body');
+  body.innerHTML = '<div class="flex justify-center py-10"><div class="w-8 h-8 spinner"></div></div>';
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    const [infoRes, videoRes] = await Promise.all([
+      fetch(`${API}/exerciseinfo/${baseId}/?format=json`),
+      fetch(`${API}/video/?format=json&exercise_base=${baseId}`)
+    ]);
+    const info   = await infoRes.json();
+    const videos = (await videoRes.json()).results || [];
+
+    const tr     = info.translations?.find(t => t.language === LANG) || info.translations?.[0] || {};
+    const name   = tr.name || 'Exercise';
+    const desc   = (tr.description || '').replace(/<[^>]*>/g, '').trim();
+    const imgs   = info.images || [];
+    const muscles    = info.muscles || [];
+    const musclesAlt = info.muscles_secondary || [];
+    const equipment  = info.equipment || [];
+    const category   = info.category?.name || '';
+
+    body.innerHTML = `
+      <!-- Top bar -->
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div class="flex-1 min-w-0">
+          <p class="text-xs mb-1" style="color:#D4AF37;">${category}</p>
+          <h2 class="font-bold text-lg leading-tight" style="color:#F0C040;">${name}</h2>
+        </div>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style="background:rgba(255,255,255,0.06);">
+          <span class="material-symbols-outlined" style="color:#666;font-size:18px;">close</span>
+        </button>
+      </div>
+
+      <!-- Imagens -->
+      ${imgs.length ? `
+        <div class="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1" style="scrollbar-width:none;">
+          ${imgs.slice(0, 4).map(img => `
+            <img src="${img.image}" alt="${name}"
+              class="rounded-2xl object-cover shrink-0"
+              style="height:140px;width:auto;max-width:200px;background:#0A0A0A;"
+              onerror="this.style.display='none'"/>
+          `).join('')}
+        </div>` : ''}
+
+      <!-- Vídeo YouTube -->
+      ${videos.length ? `
+        <div class="mb-4">
+          <p class="text-xs font-bold mb-2 flex items-center gap-1" style="color:#D4AF37;">
+            <span class="material-symbols-outlined" style="font-size:14px;">play_circle</span>
+            Vídeo demonstrativo
+          </p>
+          <div class="rounded-2xl overflow-hidden" style="aspect-ratio:16/9;background:#0A0A0A;">
+            <iframe src="https://www.youtube.com/embed/${videos[0].video_id}?rel=0"
+              class="w-full h-full" frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen></iframe>
+          </div>
+        </div>` : `
+        <div class="flex items-center gap-2 rounded-xl p-3 mb-4" style="background:#0A0A0A;border:1px solid rgba(255,255,255,0.05);">
+          <span class="material-symbols-outlined text-sm" style="color:#444;">videocam_off</span>
+          <p class="text-xs" style="color:#444;">Sem vídeo disponível para este exercício</p>
+        </div>`}
+
+      <!-- Descrição -->
+      ${desc ? `
+        <div class="mb-4">
+          <p class="text-xs font-bold mb-2" style="color:#888;">Descrição</p>
+          <p class="text-sm leading-relaxed" style="color:#888;">${desc.slice(0, 400)}${desc.length > 400 ? '...' : ''}</p>
+        </div>` : ''}
+
+      <!-- Músculos principais -->
+      ${muscles.length ? `
+        <div class="mb-3">
+          <p class="text-xs font-bold mb-2" style="color:#D4AF37;">Músculos Principais</p>
+          <div class="flex flex-wrap gap-2">
+            ${muscles.map(m => `<span class="px-3 py-1 rounded-full text-xs gold-tag">${m.name_en}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <!-- Músculos secundários -->
+      ${musclesAlt.length ? `
+        <div class="mb-3">
+          <p class="text-xs font-bold mb-2" style="color:#555;">Músculos Secundários</p>
+          <div class="flex flex-wrap gap-2">
+            ${musclesAlt.map(m => `<span class="px-3 py-1 rounded-full text-xs secondary-tag">${m.name_en}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <!-- Equipamento -->
+      ${equipment.length ? `
+        <div class="mb-4">
+          <p class="text-xs font-bold mb-2" style="color:#555;">Equipamento</p>
+          <div class="flex flex-wrap gap-2">
+            ${equipment.map(e => `<span class="px-3 py-1 rounded-full text-xs secondary-tag">${e.name}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <!-- Botão adicionar -->
+      <button onclick="addToWorkout('${name.replace(/'/g,"\\'")}'); closeModal();"
+        class="w-full py-3 rounded-2xl text-sm font-bold mt-2 flex items-center justify-center gap-2"
+        style="background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.12));color:#F0C040;border:1px solid rgba(212,175,55,0.35);">
+        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+        Adicionar ao Treino
+      </button>
+    `;
+  } catch(e) {
+    body.innerHTML = `<div class="py-10 text-center">
+      <p class="text-sm" style="color:#666;">Erro ao carregar detalhes</p>
+      <p class="text-xs mt-1 font-mono" style="color:#444;">${e.message}</p>
+    </div>`;
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+  document.body.style.overflow = '';
+  // Para o vídeo limpando o iframe
+  document.getElementById('modal-body').innerHTML = '';
+}
+
+function handleModalBg(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+function addToWorkout(name) {
+  const toast = document.createElement('div');
+  toast.textContent = '✓  ' + name + ' adicionado ao treino';
+  Object.assign(toast.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'linear-gradient(135deg,#2A1E00,#1A1200)',
+    border:'1px solid rgba(212,175,55,0.4)',
+    color:'#F0C040', padding:'10px 18px', borderRadius:'14px',
+    fontSize:'13px', fontWeight:'600', whiteSpace:'nowrap',
+    zIndex:'200', boxShadow:'0 8px 24px rgba(212,175,55,0.25)',
+    pointerEvents:'none'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity .4s'; }, 1800);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+// Fechar modal com ESC
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+init();
+</script>
+</body>
+</html>

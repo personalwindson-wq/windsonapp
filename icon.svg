@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#080808"/>
+  <defs>
+    <linearGradient id="goldMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0C040"/>
+      <stop offset="40%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#8B6914"/>
+    </linearGradient>
+    <linearGradient id="goldShine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F5D060"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#9B7B0E"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Outer W shape -->
+  <path d="M48,80 L130,430 L192,240 L256,330 L320,240 L382,430 L464,80
+           L426,80 L344,390 L282,200 L256,260 L230,200 L168,390 L86,80 Z"
+        fill="url(#goldMain)" filter="url(#glow)"/>
+  <!-- Inner highlight stripes - left arm -->
+  <path d="M86,80 L105,80 L180,375 L168,390 Z" fill="url(#goldShine)" opacity="0.6"/>
+  <!-- Inner highlight stripes - right arm -->
+  <path d="M426,80 L407,80 L332,375 L344,390 Z" fill="url(#goldShine)" opacity="0.6"/>
+  <!-- Center diamond peak highlight -->
+  <path d="M243,180 L256,130 L269,180 L256,210 Z" fill="#F5D060" opacity="0.9"/>
+  <!-- Center left inner peak -->
+  <path d="M192,240 L210,240 L256,310 L256,330 Z" fill="url(#goldShine)" opacity="0.5"/>
+  <!-- Center right inner peak -->
+  <path d="M320,240 L302,240 L256,310 L256,330 Z" fill="url(#goldShine)" opacity="0.5"/>
+</svg>
