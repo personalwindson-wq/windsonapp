@@ -1,4 +1,5 @@
 [build]
+  command = "npm install && npm run build:css"
   publish = "."
 
 [[headers]]
@@ -29,6 +30,11 @@
   for = "/*.svg"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/dist/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, must-revalidate"
 
 [[redirects]]
   from = "/*"

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'windson-pt-v1';
-const STATIC_ASSETS = ['./index.html', './manifest.json', './icon.svg'];
+const CACHE_NAME = 'windson-pt-v5';
+const STATIC_ASSETS = ['./index.html', './manifest.json', './icon.svg', './dist/style.css'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
