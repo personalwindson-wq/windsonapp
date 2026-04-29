@@ -24,7 +24,7 @@ async function fetchExercises() {
 
   const { data, error } = await sbClient
     .from('exercises')
-    .select('id, name, target_muscle, secondary_muscles, equipment, level, force_type, mechanic, category, gif_url, image_url_2, instructions')
+    .select('id, name, name_pt, target_muscle, secondary_muscles, equipment, level, force_type, mechanic, category, gif_url, image_url_2, instructions')
     .order('name', { ascending: true });
 
   if (error) throw error;
@@ -63,7 +63,7 @@ const _LEVEL_BADGE = {
 
 function renderExerciseCard(ex) {
   const cap       = s => s ? s.replace(/\b\w/g, c => c.toUpperCase()) : '—';
-  const name      = cap(ex.name);
+  const name      = ex.name_pt ? cap(ex.name_pt) : cap(ex.name);
   const muscle    = cap(ex.target_muscle);
   const equipment = cap(ex.equipment);
   const safeName  = name.replace(/'/g, "\\'");
@@ -73,16 +73,16 @@ function renderExerciseCard(ex) {
   const steps     = Array.isArray(ex.instructions) ? ex.instructions : [];
   const cardId    = 'ex-' + Math.random().toString(36).slice(2, 8);
 
-  const imgSection = (img0 || img1)
-    ? `<div class="grid ${img1 ? 'grid-cols-2' : 'grid-cols-1'} gap-0.5" style="background:#080d0d;">
-        ${img0 ? `<img src="${img0}" alt="${name} — início" class="w-full object-cover" style="aspect-ratio:1/1;" loading="lazy"
-                       onerror="this.style.display='none'"/>` : ''}
-        ${img1 ? `<img src="${img1}" alt="${name} — fim"   class="w-full object-cover" style="aspect-ratio:1/1;" loading="lazy"
-                       onerror="this.style.display='none'"/>` : ''}
+  const imgSection = (img0 && img1)
+    ? `<div class="ex-img-wrap">
+        <img src="${img0}" alt="${name} início" class="fr-a" loading="lazy" onerror="this.style.display='none'"/>
+        <img src="${img1}" alt="${name} fim"    class="fr-b" loading="lazy" onerror="this.style.display='none'"/>
       </div>`
-    : `<div class="w-full flex items-center justify-center" style="aspect-ratio:2/1;background:#080d0d;">
-         <span class="material-symbols-outlined text-4xl" style="color:#333;">fitness_center</span>
-       </div>`;
+    : img0
+      ? `<div class="ex-img-wrap"><img src="${img0}" alt="${name}" class="solo" loading="lazy" onerror="this.style.display='none'"/></div>`
+      : `<div class="ex-img-wrap flex items-center justify-center">
+           <span class="material-symbols-outlined text-4xl" style="color:#333;position:relative;">fitness_center</span>
+         </div>`;
 
   const levelBadge = lvl
     ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"

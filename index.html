@@ -20,6 +20,22 @@
 <link rel="stylesheet" href="./dist/style.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<!-- Animação dos cards de exercício -->
+<style>
+@keyframes ex-frame-a {
+  0%,48%  { opacity:1; }
+  52%,100%{ opacity:0; }
+}
+@keyframes ex-frame-b {
+  0%,48%  { opacity:0; }
+  52%,100%{ opacity:1; }
+}
+.ex-img-wrap        { position:relative; width:100%; aspect-ratio:1/1; background:#080d0d; overflow:hidden; }
+.ex-img-wrap img    { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.ex-img-wrap .fr-a  { animation:ex-frame-a 2.4s ease-in-out infinite; }
+.ex-img-wrap .fr-b  { animation:ex-frame-b 2.4s ease-in-out infinite; }
+.ex-img-wrap .solo  { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+</style>
 <!-- Dados, utilitários e serviços síncronos (devem preceder o módulo principal) -->
 <script src="./src/data/avProto.js"></script>
 <script src="./src/data/exEnMap.js"></script>
