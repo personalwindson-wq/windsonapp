@@ -24,7 +24,7 @@ async function fetchExercises() {
 
   const { data, error } = await sbClient
     .from('exercises')
-    .select('id, name, target_muscle, equipment, gif_url')
+    .select('id, name, target_muscle, secondary_muscles, equipment, level, force_type, mechanic, category, gif_url, image_url_2, instructions')
     .order('name', { ascending: true });
 
   if (error) throw error;
@@ -54,13 +54,54 @@ function searchExercises(query) {
 // ─── UI: card individual ──────────────────────────────────────────────────────
 // Aplica aspect-ratio 1/1 para evitar layout shift enquanto o GIF carrega.
 
+const _LEVEL_BADGE = {
+  beginner:     { label: 'Iniciante',     color: '#4ade80', bg: 'rgba(74,222,128,0.12)', border: 'rgba(74,222,128,0.3)'  },
+  intermediate: { label: 'Intermediário', color: '#D4AF37', bg: 'rgba(212,175,55,0.12)', border: 'rgba(212,175,55,0.3)' },
+  advanced:     { label: 'Avançado',      color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)' },
+  expert:       { label: 'Expert',        color: '#c084fc', bg: 'rgba(192,132,252,0.12)', border: 'rgba(192,132,252,0.3)' },
+};
+
 function renderExerciseCard(ex) {
-  const cap  = s => s ? s.replace(/\b\w/g, c => c.toUpperCase()) : '—';
+  const cap       = s => s ? s.replace(/\b\w/g, c => c.toUpperCase()) : '—';
   const name      = cap(ex.name);
   const muscle    = cap(ex.target_muscle);
   const equipment = cap(ex.equipment);
   const safeName  = name.replace(/'/g, "\\'");
-  const gifUrl    = ex.gif_url || '';
+  const img0      = ex.gif_url     || '';
+  const img1      = ex.image_url_2 || '';
+  const lvl       = _LEVEL_BADGE[ex.level] || null;
+  const steps     = Array.isArray(ex.instructions) ? ex.instructions : [];
+  const cardId    = 'ex-' + Math.random().toString(36).slice(2, 8);
+
+  const imgSection = (img0 || img1)
+    ? `<div class="grid ${img1 ? 'grid-cols-2' : 'grid-cols-1'} gap-0.5" style="background:#080d0d;">
+        ${img0 ? `<img src="${img0}" alt="${name} — início" class="w-full object-cover" style="aspect-ratio:1/1;" loading="lazy"
+                       onerror="this.style.display='none'"/>` : ''}
+        ${img1 ? `<img src="${img1}" alt="${name} — fim"   class="w-full object-cover" style="aspect-ratio:1/1;" loading="lazy"
+                       onerror="this.style.display='none'"/>` : ''}
+      </div>`
+    : `<div class="w-full flex items-center justify-center" style="aspect-ratio:2/1;background:#080d0d;">
+         <span class="material-symbols-outlined text-4xl" style="color:#333;">fitness_center</span>
+       </div>`;
+
+  const levelBadge = lvl
+    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
+             style="background:${lvl.bg};color:${lvl.color};border:1px solid ${lvl.border};">${lvl.label}</span>`
+    : '';
+
+  const instructionsBlock = steps.length
+    ? `<div id="${cardId}-inst" style="display:none;" class="mt-1 flex flex-col gap-2">
+        ${steps.map((s, i) => `
+          <div class="flex gap-2 text-[11px]" style="color:#aaa;">
+            <span class="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold mt-0.5"
+                  style="background:rgba(212,175,55,0.15);color:#D4AF37;">${i + 1}</span>
+            <p>${s}</p>
+          </div>`).join('')}
+      </div>
+      <button onclick="(function(el,btn){const open=el.style.display==='none';el.style.display=open?'block':'none';btn.textContent=open?'Ocultar instruções':'Ver instruções';})(document.getElementById('${cardId}-inst'),this)"
+              class="mt-1 text-[10px] font-medium"
+              style="color:rgba(212,175,55,0.7);text-align:left;">Ver instruções</button>`
+    : '';
 
   return `
   <div class="exercise-card flex flex-col rounded-2xl overflow-hidden transition-all duration-300"
@@ -68,27 +109,18 @@ function renderExerciseCard(ex) {
        onmouseenter="this.style.borderColor='rgba(212,175,55,0.35)'"
        onmouseleave="this.style.borderColor='rgba(212,175,55,0.12)'">
 
-    <div class="w-full overflow-hidden" style="aspect-ratio:1/1;background:#080d0d;">
-      ${gifUrl
-        ? `<img src="${gifUrl}"
-                alt="Biomecânica: ${name}"
-                class="w-full h-full object-cover"
-                loading="lazy"
-                onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'><span class=\\'material-symbols-outlined text-4xl\\' style=\\'color:#333;\\'>fitness_center</span></div>'"/>`
-        : `<div class="w-full h-full flex items-center justify-center">
-             <span class="material-symbols-outlined text-4xl" style="color:#333;">fitness_center</span>
-           </div>`
-      }
-    </div>
+    ${imgSection}
 
-    <div class="flex flex-col gap-3 p-4 flex-grow">
+    <div class="flex flex-col gap-2 p-4 flex-grow">
       <h3 class="font-headline font-bold text-sm text-on-surface leading-tight">${name}</h3>
-      <div class="flex gap-2 flex-wrap">
+      <div class="flex gap-1.5 flex-wrap">
         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
               style="background:rgba(212,175,55,0.12);color:#D4AF37;border:1px solid rgba(212,175,55,0.25);">${muscle}</span>
         <span class="px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide"
               style="background:rgba(255,255,255,0.05);color:#777;border:1px solid rgba(255,255,255,0.07);">${equipment}</span>
+        ${levelBadge}
       </div>
+      ${instructionsBlock}
       <button onclick="exBankAddToWorkout('${safeName}')"
               class="mt-auto w-full py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95"
               style="background:rgba(212,175,55,0.1);color:#D4AF37;border:1px solid rgba(212,175,55,0.25);">
