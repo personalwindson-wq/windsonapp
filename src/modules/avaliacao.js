@@ -372,8 +372,41 @@ function avRenderM(meas) {
   });
 }
 
-function avRenderProto(meas, name) {
+// Mapeamento: chave do desvio → músculos a buscar no banco
+const _AV_MUSCLE_MAP = {
+  anteriorPelvicTilt:  ['glutes', 'abdominals', 'hip flexors', 'lower back'],
+  shoulderAsymmetry:   ['trapezius', 'shoulders', 'middle back', 'rotator cuff'],
+  hipAsymmetry:        ['glutes', 'abductors', 'adductors', 'hip flexors'],
+  trunkInclination:    ['abdominals', 'obliques', 'lower back'],
+  headTilt:            ['trapezius', 'neck', 'shoulders'],
+  cervicalForwardHead: ['trapezius', 'chest', 'neck', 'middle back'],
+  kneeAlignment:       ['quadriceps', 'glutes', 'abductors', 'hamstrings'],
+};
+
+function _avBankRecs(exercises, key, severity) {
+  const muscles = _AV_MUSCLE_MAP[key] || [];
+  if (!muscles.length || !exercises.length) return [];
+  const cats = severity === 'moderate'
+    ? ['strength', 'stretching']
+    : ['stretching', 'strength'];
+  return exercises
+    .filter(ex => {
+      const t = (ex.target_muscle      || '').toLowerCase();
+      const s = (ex.secondary_muscles  || '').toLowerCase();
+      return muscles.some(ms => t.includes(ms) || s.includes(ms));
+    })
+    .filter(ex => cats.includes(ex.category))
+    .sort((a, b) => cats.indexOf(a.category) - cats.indexOf(b.category))
+    .slice(0, 4);
+}
+
+async function avRenderProto(meas, name) {
   const cont = document.getElementById('av-protocol'); cont.innerHTML = '';
+
+  // Carrega cache de exercícios uma vez
+  const exercises = (typeof window.fetchExercises === 'function')
+    ? await window.fetchExercises().catch(() => [])
+    : [];
   const devs = {};
   Object.values(meas).forEach(m => {
     const s = avSev(m); if (s === 'normal') return;
@@ -421,6 +454,53 @@ function avRenderProto(meas, name) {
       + '<div class="space-y-2"><p class="text-xs font-label text-on-surface-variant uppercase tracking-widest font-semibold">Exercícios Prescritos</p>' + exHtml + '</div>'
       + (ciHtml ? '<div class="space-y-2"><p class="text-xs font-label text-error uppercase tracking-widest font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-sm">block</span> Contra-indicado neste ciclo</p>' + ciHtml + '</div>' : '');
     cont.appendChild(card);
+
+    // ── Recomendações do banco de exercícios ──────────────────────────────────
+    const recs = _avBankRecs(exercises, m.key, s);
+    if (recs.length) {
+      const recWrap = document.createElement('div');
+      recWrap.className = 'mt-4 space-y-2';
+      recWrap.innerHTML = '<p class="text-xs font-label uppercase tracking-widest font-semibold" style="color:rgba(212,175,55,0.65);">Exercícios do Banco Recomendados</p>';
+
+      const recList = document.createElement('div');
+      recList.className = 'flex gap-3 overflow-x-auto pb-1';
+      recList.style.scrollbarWidth = 'none';
+
+      recs.forEach(ex => {
+        const label    = ex.name_pt || ex.name;
+        const safeName = label.replace(/'/g, "\\'");
+        const img0     = ex.gif_url     || '';
+        const img1     = ex.image_url_2 || '';
+
+        const imgHtml = (img0 && img1)
+          ? `<div class="ex-img-wrap rounded-xl overflow-hidden" style="aspect-ratio:1/1;">
+               <img src="${img0}" class="fr-a" loading="lazy" onerror="this.style.display='none'"/>
+               <img src="${img1}" class="fr-b" loading="lazy" onerror="this.style.display='none'"/>
+             </div>`
+          : img0
+            ? `<div class="ex-img-wrap rounded-xl overflow-hidden" style="aspect-ratio:1/1;">
+                 <img src="${img0}" class="solo" loading="lazy" onerror="this.style.display='none'"/>
+               </div>`
+            : `<div class="rounded-xl flex items-center justify-center" style="aspect-ratio:1/1;background:#0a0a0a;">
+                 <span class="material-symbols-outlined" style="color:#333;font-size:20px;">fitness_center</span>
+               </div>`;
+
+        const mini = document.createElement('div');
+        mini.className = 'flex-shrink-0 flex flex-col gap-1.5 rounded-xl p-2';
+        mini.style.cssText = 'background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);width:112px;';
+        mini.innerHTML = imgHtml
+          + `<p class="text-[10px] font-bold text-on-surface leading-tight" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${label}</p>`
+          + `<button onclick="exBankAddToWorkout('${safeName}')"
+                     class="w-full py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide transition-all active:scale-95"
+                     style="background:rgba(212,175,55,0.1);color:#D4AF37;border:1px solid rgba(212,175,55,0.2);">
+               + Protocolo
+             </button>`;
+        recList.appendChild(mini);
+      });
+
+      recWrap.appendChild(recList);
+      card.appendChild(recWrap);
+    }
   });
 
   // GIFs carregados escalonados (400ms entre cada) para não estourar cota da API
