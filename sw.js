@@ -1,9 +1,11 @@
-const CACHE_NAME = 'windson-pt-v5';
-const STATIC_ASSETS = ['./index.html', './manifest.json', './icon.svg', './dist/style.css'];
+const CACHE_NAME   = 'windson-pt-v6';
+const STATIC_CACHE = ['./manifest.json', './icon.svg', './dist/style.css'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(STATIC_CACHE))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -17,21 +19,41 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  // CDN resources: network first, fallback to cache
+
+  // Recursos externos (CDN, fonts, Supabase): network first, fallback cache
   if (url.origin !== location.origin) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
-  // Local assets: cache first
+
+  // HTML e JS: network first — garante que o app sempre atualiza automaticamente
+  const isCode = url.pathname === '/'
+    || url.pathname.endsWith('.html')
+    || url.pathname.endsWith('.js');
+
+  if (isCode) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response && response.status === 200) {
+            caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request) || caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // CSS, imagens, ícones: cache first (raramente mudam)
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
         if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
         }
         return response;
       }).catch(() => caches.match('./index.html'));
