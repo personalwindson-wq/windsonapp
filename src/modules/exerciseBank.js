@@ -136,7 +136,17 @@ function exBankRender(exercises) {
   const list = document.getElementById('ex-bank-list');
   if (!list) return;
   if (!exercises || !exercises.length) {
-    list.innerHTML = '<p class="text-xs text-center py-8" style="color:#666;">Nenhum exercício encontrado.</p>';
+    const searchVal = document.getElementById('ex-search-input')?.value?.trim();
+    list.innerHTML = searchVal
+      ? `<div class="flex flex-col items-center gap-3 py-10 px-4 text-center">
+           <span class="material-symbols-outlined text-3xl" style="color:#333;">search_off</span>
+           <p class="text-xs" style="color:#666;">Nenhum resultado para "<strong style="color:#888;">${searchVal}</strong>"</p>
+           <button onclick="document.getElementById('ex-search-input').value='';exBankSearchDebounce('')" class="text-xs px-3 py-1.5 rounded-lg transition-colors hover:bg-white/5" style="color:#9B7B0E;border:1px solid rgba(212,175,55,0.2);">Limpar busca</button>
+         </div>`
+      : `<div class="flex flex-col items-center gap-3 py-10 px-4 text-center">
+           <span class="material-symbols-outlined text-3xl" style="color:#333;">fitness_center</span>
+           <p class="text-xs" style="color:#666;">Nenhum exercício neste grupo muscular.</p>
+         </div>`;
     return;
   }
   list.innerHTML = `<div class="grid grid-cols-2 gap-3">${exercises.map(renderExerciseCard).join('')}</div>`;

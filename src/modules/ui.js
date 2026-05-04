@@ -28,19 +28,16 @@ const _meshColors = {
   'tab-financeiro': ['oklch(0.20 0.08 300)', 'oklch(0.15 0.06 320)'],
 };
 
-function showTab(tabId) {
-  // Avaliação postural coleta dados biométricos sensíveis (LGPD art. 11).
-  // Exige consentimento por sessão antes de entrar na aba.
-  if (tabId === 'tab-avaliacao' && !sessionStorage.getItem('lgpd_av_consent')) {
-    _openLgpdConsent();
-    return;
-  }
+// Ativa a aba sem tocar no histórico — usado por showTab e pelo popstate handler.
+function _activateTab(tabId) {
+  const section = document.getElementById(tabId);
+  if (!section) return;
 
   document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-  const section = document.getElementById(tabId);
   section.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelector('[data-tab="' + tabId + '"]').classList.add('active');
+  const navBtn = document.querySelector('[data-tab="' + tabId + '"]');
+  if (navBtn) navBtn.classList.add('active');
   window.scrollTo(0, 0);
 
   const colors = _meshColors[tabId];
@@ -49,8 +46,6 @@ function showTab(tabId) {
     document.body.style.setProperty('--mesh-c2', colors[1]);
   }
 
-  // Após tornar a aba visível, re-observa qualquer stagger-item que perdeu a
-  // janela de observação enquanto a aba estava oculta (display:none bloqueia o IO).
   requestAnimationFrame(() => {
     section.querySelectorAll('.stagger-item:not(.stagger-show)').forEach(el => {
       staggerObserver.unobserve(el);
@@ -65,16 +60,37 @@ function showTab(tabId) {
     }
     if (typeof window.loadWorkoutClientSelector === 'function') window.loadWorkoutClientSelector();
   }
-  if (tabId === 'tab-clientes') {
-    if (typeof window.fetchClientes === 'function') window.fetchClientes();
-  }
-  if (tabId === 'tab-agenda') {
-    if (typeof window.fetchAgenda === 'function') window.fetchAgenda();
-  }
-  if (tabId === 'tab-financeiro') {
-    if (typeof window.fetchFinanceiro === 'function') window.fetchFinanceiro();
-  }
+  if (tabId === 'tab-clientes')   { if (typeof window.fetchClientes  === 'function') window.fetchClientes(); }
+  if (tabId === 'tab-agenda')     { if (typeof window.fetchAgenda    === 'function') window.fetchAgenda(); }
+  if (tabId === 'tab-financeiro') { if (typeof window.fetchFinanceiro === 'function') window.fetchFinanceiro(); }
 }
+
+function showTab(tabId) {
+  // Avaliação postural coleta dados biométricos sensíveis (LGPD art. 11).
+  // Exige consentimento por sessão antes de entrar na aba.
+  if (tabId === 'tab-avaliacao' && !sessionStorage.getItem('lgpd_av_consent')) {
+    _openLgpdConsent();
+    return;
+  }
+  history.pushState({ tab: tabId }, '', '#' + tabId.replace('tab-', ''));
+  _activateTab(tabId);
+}
+
+// Botão Voltar do browser/Android — navega entre abas sem fechar o app.
+window.addEventListener('popstate', e => {
+  const tabId = (e.state && e.state.tab) ? e.state.tab : 'tab-dashboard';
+  // Fecha qualquer modal aberto antes de navegar
+  document.querySelectorAll('[id^="modal-"]').forEach(m => {
+    if (!m.classList.contains('hidden')) m.classList.add('hidden');
+  });
+  _activateTab(tabId);
+});
+
+// Estado inicial: garante que o dashboard seja a entrada base do histórico
+// para que o primeiro "Voltar" não quebre a navegação.
+document.addEventListener('DOMContentLoaded', () => {
+  history.replaceState({ tab: 'tab-dashboard' }, '', location.pathname + location.search);
+});
 
 // ─── Modais ──────────────────────────────────────────────────────────────────
 

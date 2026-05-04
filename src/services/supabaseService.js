@@ -136,7 +136,10 @@ async function fetchDashboard() {
     .lte('data_hora_inicio', end.toISOString())
     .order('data_hora_inicio', { ascending: true });
 
-  if (error || !data) return;
+  if (error || !data) {
+    el.innerHTML = '<p class="text-sm text-outline p-4 text-center">Não foi possível carregar a agenda. Verifique sua conexão.</p>';
+    return;
+  }
 
   const subtitle = document.getElementById('dashboard-sessoes-subtitle');
   if (subtitle) {
@@ -282,18 +285,26 @@ async function fetchAgenda(date) {
     const df  = ag.data_hora_fim ? new Date(ag.data_hora_fim) : null;
     const t1  = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const t2  = df ? df.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-    const timeStr   = df ? `${t1} – ${t2}` : t1;
-    const isAv      = ag.tipo === 'Avaliação';
-    const borderCls = isAv ? 'border-l-tertiary' : 'border-l-primary-container';
-    const typeCls   = isAv ? 'text-tertiary'     : 'text-primary-container';
+    const timeStr    = df ? `${t1} – ${t2}` : t1;
+    const isAv       = ag.tipo === 'Avaliação';
+    const isCancelado = ag.status === 'Cancelado';
+    const borderCls  = isCancelado ? 'border-l-outline-variant' : (isAv ? 'border-l-tertiary' : 'border-l-primary-container');
+    const typeCls    = isCancelado ? 'text-outline'             : (isAv ? 'text-tertiary'     : 'text-primary-container');
+    const cancelBtn  = isCancelado ? '' : `
+      <button onclick="cancelarAgendamento('${ag.id}')" class="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition-colors hover:bg-error/10 active:scale-95" style="color:#666;" title="Cancelar sessão">
+        <span class="material-symbols-outlined text-sm">event_busy</span>Cancelar
+      </button>`;
     return `
-      <div class="glass-panel rounded-xl p-4 border-l-4 ${borderCls} flex flex-col gap-1 cursor-pointer hover:bg-white/5 transition-colors">
+      <div class="glass-panel rounded-xl p-4 border-l-4 ${borderCls} flex flex-col gap-1 hover:bg-white/5 transition-colors ${isCancelado ? 'opacity-50' : ''}">
         <div class="flex justify-between items-center">
           <span class="text-xs font-label uppercase tracking-wider ${typeCls} font-semibold">${ag.tipo}</span>
           <span class="text-xs text-on-surface-variant font-label">${timeStr}</span>
         </div>
         <h4 class="text-on-surface font-headline font-semibold text-lg leading-tight">${ag.clientes?.nome_completo || 'Cliente'}</h4>
-        ${ag.status ? `<span class="text-xs text-outline">${ag.status}</span>` : ''}
+        <div class="flex items-center justify-between mt-1">
+          ${ag.status ? `<span class="text-xs text-outline">${ag.status}</span>` : '<span></span>'}
+          ${cancelBtn}
+        </div>
       </div>`;
   }).join('');
 }
@@ -453,6 +464,16 @@ async function fetchFinanceiro() {
   }).join('');
 }
 
+// ─── Cancelar agendamento ─────────────────────────────────────────────────────
+
+async function cancelarAgendamento(id) {
+  if (!confirm('Cancelar esta sessão? O registro ficará marcado como Cancelado.')) return;
+  const { error } = await sbClient.from('agendamentos').update({ status: 'Cancelado' }).eq('id', id);
+  if (error) { alert('Erro ao cancelar: ' + error.message); return; }
+  if (typeof window.fetchAgenda    === 'function') window.fetchAgenda();
+  if (typeof window.fetchDashboard === 'function') window.fetchDashboard();
+}
+
 // ─── Exclusão de dados (LGPD art. 18 — direito ao esquecimento) ──────────────
 
 async function deleteClienteData(id, nome) {
@@ -490,6 +511,7 @@ async function deleteClienteData(id, nome) {
 }
 
 // ─── Exposição global ─────────────────────────────────────────────────────────
+window.cancelarAgendamento       = cancelarAgendamento;
 window.deleteClienteData         = deleteClienteData;
 window.fetchClientes             = fetchClientes;
 window.createCliente             = createCliente;
