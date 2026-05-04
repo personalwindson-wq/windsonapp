@@ -43,6 +43,18 @@
   [headers.values]
     Cache-Control = "public, max-age=604800, must-revalidate"
 
+[[headers]]
+  for = "/.well-known/assetlinks.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=3600"
+
+[[redirects]]
+  from = "/.well-known/assetlinks.json"
+  to = "/.well-known/assetlinks.json"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
