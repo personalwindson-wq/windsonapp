@@ -1,6 +1,13 @@
 [build]
   command = "npm install && npm run build:css"
   publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  # Defina RAPIDAPI_KEY nas variáveis de ambiente do painel Netlify:
+  # Site → Site configuration → Environment variables → Add variable
+  # Nome: RAPIDAPI_KEY   Valor: sua_chave_real
+  # A chave NÃO deve estar em nenhum arquivo commitado.
 
 [[headers]]
   for = "/*"

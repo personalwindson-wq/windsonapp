@@ -2,9 +2,12 @@
 // RapidAPI Service — ExerciseDB
 // Responsável por: cache de GIFs, busca por parte do corpo e por nome.
 // Depende de: EX_EN_MAP (src/data/exEnMap.js) carregado anteriormente.
+//
+// A chave RapidAPI NÃO fica mais no browser — as chamadas passam pelo
+// proxy Netlify em /.netlify/functions/exercises
 // ════════════════════════════════════════════════════
 
-const RAPIDAPI_KEY = (window.APP_CONFIG || {}).RAPIDAPI_KEY || '';
+const _EXERCISE_PROXY = '/.netlify/functions/exercises';
 
 // ─── Utilitários internos ────────────────────────────────────────────────────
 
@@ -45,13 +48,10 @@ async function loadExGif(name, elId) {
 
   const term = exGetTerm(name);
   if (!term) return;
-  if (!RAPIDAPI_KEY || RAPIDAPI_KEY.includes('SUA_')) return;
 
   try {
-    const res = await fetch(
-      `https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(term)}?limit=3&offset=0`,
-      { headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com' } }
-    );
+    const res = await fetch(`${_EXERCISE_PROXY}?name=${encodeURIComponent(term)}`);
+    if (!res.ok) return;
     const data = await res.json();
     const gif = Array.isArray(data) && data[0]?.gifUrl ? data[0].gifUrl : null;
     if (gif) {
@@ -59,7 +59,7 @@ async function loadExGif(name, elId) {
       const el2 = document.getElementById(elId);
       if (el2) el2.innerHTML = `<img src="${gif}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy"/>`;
     }
-  } catch(e) { /* silent — sem chave ou offline */ }
+  } catch(e) { /* silent — offline ou proxy indisponível */ }
 }
 
 // ─── Exposição global ─────────────────────────────────────────────────────────

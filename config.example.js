@@ -3,7 +3,9 @@
 // config.js está no .gitignore e NUNCA deve ser commitado.
 
 window.APP_CONFIG = {
-  SUPABASE_URL:     'https://your-project-id.supabase.co',
-  SUPABASE_ANON_KEY: 'your_supabase_anon_key_here',
-  RAPIDAPI_KEY:     'your_rapidapi_key_here'
+  SUPABASE_URL:      'https://your-project-id.supabase.co',
+  SUPABASE_ANON_KEY: 'your_supabase_anon_key_here'
+  // RAPIDAPI_KEY foi removido do browser.
+  // Configure-a como variável de ambiente no painel Netlify:
+  // Site → Site configuration → Environment variables → RAPIDAPI_KEY
 };

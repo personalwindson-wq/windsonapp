@@ -9,8 +9,12 @@
 
 const sbClient = window.sbClient;
 
-// ─── Whitelist ───────────────────────────────────────────────────────────────
-// E-mails autorizados. Qualquer outro é bloqueado imediatamente.
+// ─── Whitelist (UX-only) ─────────────────────────────────────────────────────
+// Esta lista serve apenas para exibir o erro rapidamente na tela sem esperar
+// uma chamada ao banco. A segurança REAL está no RLS do Supabase — a função
+// is_allowed_user() no banco rejeita qualquer query de e-mail não autorizado,
+// mesmo que alguém contorne esta checagem client-side.
+// Para adicionar/remover acesso, edite também supabase_rls_migration.sql.
 
 const ALLOWED_EMAILS = [
   'windsonwood32@gmail.com',
