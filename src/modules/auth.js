@@ -20,6 +20,7 @@ const ALLOWED_EMAILS = [
   'windsonwood32@gmail.com',
   'gustavolima281189@gmail.com',
   'julio.cborges2@gmail.com',
+  'personalwindson@gmail.com',
 ];
 
 // ─── Gatekeeper ──────────────────────────────────────────────────────────────
