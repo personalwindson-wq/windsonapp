@@ -46,9 +46,11 @@ async function fetchClientes() {
         </div>
         <div class="flex gap-2 flex-wrap items-center justify-between">
           <span class="px-2 py-1 bg-${statusColor}/10 text-${statusColor} rounded-lg text-xs font-label border border-${statusColor}/20">${c.status || 'Pendente'}</span>
-          <button onclick="deleteClienteData('${c.id}','${(c.nome_completo||'').replace(/'/g,'')}')" class="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-label transition-colors hover:bg-error/10 active:scale-95" style="color:#666;" title="Excluir todos os dados (LGPD)">
-            <span class="material-symbols-outlined text-sm">delete</span>
-            Excluir dados
+          <button onclick="openMedidasModal('${c.id}','${(c.nome_completo||'').replace(/'/g,"")}')" class="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-label transition-colors hover:bg-primary/10 active:scale-95" style="color:#9B7B0E;border:1px solid rgba(212,175,55,0.2);">
+            <span class="material-symbols-outlined text-sm">monitor_weight</span>Medidas
+          </button>
+          <button onclick="deleteClienteData('${c.id}','${(c.nome_completo||'').replace(/'/g,"")}')" class="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-label transition-colors hover:bg-error/10 active:scale-95" style="color:#666;" title="Excluir todos os dados (LGPD)">
+            <span class="material-symbols-outlined text-sm">delete</span>Excluir dados
           </button>
         </div>
       `;
@@ -99,19 +101,27 @@ async function createAgendamento() {
   const dataLocal = document.getElementById('na-data').value;
   if (!cid || !dataLocal) { alert('Selecione cliente e data/hora!'); return; }
 
-  const dInicio = new Date(dataLocal);
-  const dFim    = new Date(dInicio.getTime() + 60 * 60000); // +1 hora
+  const dBase   = new Date(dataLocal);
+  const repetir = document.getElementById('na-repetir')?.checked;
+  const semanas = repetir ? Math.max(1, parseInt(document.getElementById('na-semanas')?.value) || 1) : 1;
 
-  const { error } = await sbClient.from('agendamentos').insert([{
-    cliente_id:       cid,
-    tipo:             tipo,
-    data_hora_inicio: dInicio.toISOString(),
-    data_hora_fim:    dFim.toISOString()
-  }]);
+  const records = Array.from({ length: semanas }, (_, i) => {
+    const dInicio = new Date(dBase.getTime() + i * 7 * 24 * 60 * 60 * 1000);
+    return {
+      cliente_id:       cid,
+      tipo:             tipo,
+      data_hora_inicio: dInicio.toISOString(),
+      data_hora_fim:    new Date(dInicio.getTime() + 60 * 60000).toISOString()
+    };
+  });
 
+  const { error } = await sbClient.from('agendamentos').insert(records);
   if (error) { alert('Erro ao agendar: ' + error.message); return; }
+
   window.closeModal('modal-novo-agendamento');
   document.getElementById('na-data').value = '';
+  const repetirEl = document.getElementById('na-repetir'); if (repetirEl) repetirEl.checked = false;
+  document.getElementById('na-semanas-wrap')?.classList.add('hidden');
   if (typeof window.fetchDashboard === 'function') window.fetchDashboard();
   if (typeof window.fetchAgenda    === 'function') window.fetchAgenda();
 }
@@ -464,6 +474,92 @@ async function fetchFinanceiro() {
   }).join('');
 }
 
+// ─── Medidas Corporais ────────────────────────────────────────────────────────
+
+let _medidasClienteId = null;
+
+async function openMedidasModal(clienteId, clienteNome) {
+  _medidasClienteId = clienteId;
+  document.getElementById('modal-medidas-titulo').textContent = clienteNome || 'Medidas Corporais';
+  ['med-peso','med-altura','med-gordura','med-cintura','med-quadril','med-braco','med-obs'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('med-imc-wrap').classList.add('hidden');
+
+  const histEl = document.getElementById('med-historico-wrap');
+  const listEl = document.getElementById('med-historico-list');
+  histEl.classList.add('hidden');
+
+  const { data } = await sbClient.from('medidas')
+    .select('*').eq('cliente_id', clienteId)
+    .order('created_at', { ascending: false }).limit(3);
+
+  if (data && data.length) {
+    listEl.innerHTML = data.map(m => {
+      const dt = new Date(m.created_at).toLocaleDateString('pt-BR');
+      const imc = m.peso && m.altura ? (m.peso / Math.pow(m.altura / 100, 2)).toFixed(1) : '—';
+      return `<div class="flex justify-between items-center px-3 py-2 rounded-xl text-xs" style="background:#141414;">
+        <span style="color:#666;">${dt}</span>
+        <span style="color:#AAA;">${m.peso ? m.peso + 'kg' : '—'} · IMC ${imc}</span>
+        <span style="color:#666;">${m.gordura ? m.gordura + '% gord.' : ''}</span>
+      </div>`;
+    }).join('');
+    histEl.classList.remove('hidden');
+  }
+
+  window.openModal('modal-medidas');
+}
+
+function calcIMC() {
+  const peso   = parseFloat(document.getElementById('med-peso')?.value);
+  const altura = parseFloat(document.getElementById('med-altura')?.value);
+  const wrap   = document.getElementById('med-imc-wrap');
+  if (!peso || !altura || altura < 50) { wrap.classList.add('hidden'); return; }
+  const imc = peso / Math.pow(altura / 100, 2);
+  const cat = imc < 18.5 ? { t: 'Abaixo do peso', c: '#60A5FA' }
+            : imc < 25   ? { t: 'Peso normal',     c: '#D4AF37'  }
+            : imc < 30   ? { t: 'Sobrepeso',        c: '#F0A020'  }
+            :               { t: 'Obesidade',        c: '#ffb4ab'  };
+  document.getElementById('med-imc-valor').textContent = imc.toFixed(1);
+  document.getElementById('med-imc-valor').style.color = cat.c;
+  document.getElementById('med-imc-cat').textContent   = cat.t;
+  document.getElementById('med-imc-cat').style.background = cat.c + '22';
+  document.getElementById('med-imc-cat').style.color       = cat.c;
+  wrap.classList.remove('hidden');
+}
+
+async function saveMedida() {
+  if (!_medidasClienteId) return;
+  const get = id => parseFloat(document.getElementById(id)?.value) || null;
+  const row = {
+    cliente_id:  _medidasClienteId,
+    peso:        get('med-peso'),
+    altura:      parseInt(document.getElementById('med-altura')?.value) || null,
+    gordura:     get('med-gordura'),
+    cintura:     get('med-cintura'),
+    quadril:     get('med-quadril'),
+    braco:       get('med-braco'),
+    observacoes: document.getElementById('med-obs')?.value.trim() || null,
+  };
+  if (!row.peso && !row.altura) { alert('Preencha ao menos peso ou altura.'); return; }
+
+  const { error } = await sbClient.from('medidas').insert([row]);
+  if (error) { alert('Erro ao salvar medidas: ' + error.message); return; }
+  window.closeModal('modal-medidas');
+}
+
+// ─── Histórico de avaliações por nome ─────────────────────────────────────────
+
+async function fetchAvaliacoesCliente(nome) {
+  if (!nome) return [];
+  const { data } = await sbClient.from('avaliacoes_historico')
+    .select('score, created_at')
+    .eq('cliente_nome', nome)
+    .order('created_at', { ascending: false })
+    .limit(5);
+  return data || [];
+}
+
 // ─── Cancelar agendamento ─────────────────────────────────────────────────────
 
 async function cancelarAgendamento(id) {
@@ -511,6 +607,10 @@ async function deleteClienteData(id, nome) {
 }
 
 // ─── Exposição global ─────────────────────────────────────────────────────────
+window.openMedidasModal          = openMedidasModal;
+window.saveMedida                = saveMedida;
+window.calcIMC                   = calcIMC;
+window.fetchAvaliacoesCliente    = fetchAvaliacoesCliente;
 window.cancelarAgendamento       = cancelarAgendamento;
 window.deleteClienteData         = deleteClienteData;
 window.fetchClientes             = fetchClientes;

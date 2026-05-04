@@ -193,6 +193,7 @@ async function avRunAnalysis() {
     document.getElementById('av-result-name').textContent = name;
     avRenderM(allM);
     avRenderProto(allM, name);
+    _avSaveAndHistory(allM, name);
   } catch (e) {
     console.error('[Windson PT] Erro IA:', e);
     document.getElementById('av-loading').classList.add('hidden');
@@ -337,6 +338,59 @@ function avCalcM(pose, view) {
     }
   }
   return res;
+}
+
+// ─── Score + persistência + histórico ────────────────────────────────────────
+
+function _avCalcScore(meas) {
+  const items = Object.values(meas);
+  if (!items.length) return null;
+  const pts = items.map(m => avSev(m) === 'normal' ? 10 : avSev(m) === 'mild' ? 6 : 2);
+  return +(pts.reduce((a, b) => a + b, 0) / pts.length).toFixed(2);
+}
+
+async function _avSaveAndHistory(meas, nome) {
+  const score = _avCalcScore(meas);
+  const sbClient = window.sbClient;
+  if (!sbClient) return;
+
+  // Salva avaliação no banco
+  await sbClient.from('avaliacoes_historico').insert([{
+    cliente_nome: nome,
+    score:        score,
+    medicoes:     meas
+  }]);
+
+  // Busca histórico para exibir
+  const hist = document.getElementById('av-historico');
+  const list = document.getElementById('av-historico-list');
+  if (!hist || !list) return;
+
+  if (typeof window.fetchAvaliacoesCliente === 'function') {
+    const data = await window.fetchAvaliacoesCliente(nome);
+    if (data && data.length > 1) { // só mostra se houver avaliações anteriores
+      const scoreColor = s => s >= 8 ? '#D4AF37' : s >= 5 ? '#F0A020' : '#ffb4ab';
+      list.innerHTML = data.map((av, i) => {
+        const dt    = new Date(av.created_at).toLocaleDateString('pt-BR');
+        const s     = av.score != null ? av.score.toFixed(1) : '—';
+        const delta = i < data.length - 1 && av.score != null && data[i+1].score != null
+          ? (av.score - data[i+1].score).toFixed(1) : null;
+        const deltaStr = delta != null
+          ? `<span style="color:${parseFloat(delta) >= 0 ? '#D4AF37' : '#ffb4ab'};">${parseFloat(delta) >= 0 ? '+' : ''}${delta}</span>`
+          : '';
+        return `<div class="flex items-center justify-between px-3 py-2 rounded-xl text-xs" style="background:#141414;">
+          <span style="color:#666;">${dt}</span>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-base" style="color:${scoreColor(av.score)};font-family:'Sora',sans-serif;">${s}<span class="text-[10px]">/10</span></span>
+            ${deltaStr}
+          </div>
+        </div>`;
+      }).join('');
+      hist.classList.remove('hidden');
+    } else {
+      hist.classList.add('hidden');
+    }
+  }
 }
 
 // ─── Renderização de resultados ───────────────────────────────────────────────
