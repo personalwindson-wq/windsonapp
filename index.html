@@ -115,6 +115,10 @@
         <p id="menu-user-name" class="font-bold text-sm" style="color:#F0E8CC;font-family:'Sora',sans-serif;"></p>
         <p id="menu-user-email" class="text-xs mt-0.5 truncate" style="color:#666;"></p>
       </div>
+      <button onclick="openPrivacidade()" class="w-full flex items-center gap-3 px-4 py-3 active:bg-white/5 transition-colors border-b" style="touch-action:manipulation;border-color:rgba(212,175,55,0.1);">
+        <span class="material-symbols-outlined text-lg" style="color:#9B7B0E;">shield</span>
+        <span class="text-sm" style="color:#AAA;">Política de Privacidade</span>
+      </button>
       <button onclick="doLogout()" class="w-full flex items-center gap-3 px-4 py-4 active:bg-white/5 transition-colors" style="touch-action:manipulation;">
         <span class="material-symbols-outlined text-lg" style="color:#ffb4ab;">logout</span>
         <span class="text-sm" style="color:#ffb4ab;">Sair da conta</span>
@@ -815,7 +819,10 @@
     <!-- Mensagem de Erro de Autenticação -->
     <div id="login-error-msg" class="hidden w-full mt-4 p-3 rounded-xl border border-error/20 bg-error/10 text-error text-xs text-center font-bold"></div>
 
-    <p class="text-xs text-center mt-6" style="color:#333;">Acesso exclusivo para membros autorizados</p>
+    <p class="text-xs text-center mt-6" style="color:#333;">
+      Acesso exclusivo para membros autorizados •
+      <button onclick="openPrivacidade()" class="underline hover:opacity-80 transition-opacity" style="color:#555;">Privacidade</button>
+    </p>
 
   </div>
 </div>
@@ -1071,6 +1078,136 @@
 
 })();
 </script>
+<!-- ═══ MODAL: CONSENTIMENTO LGPD — AVALIAÇÃO POSTURAL ════════════════════════ -->
+<div id="modal-lgpd-consent" class="hidden fixed inset-0 z-[180] flex items-center justify-center px-4" style="background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);">
+  <div class="w-full max-w-sm rounded-3xl p-6 flex flex-col gap-5" style="background:#0F0F0F;border:1px solid rgba(212,175,55,0.25);box-shadow:0 24px 64px rgba(0,0,0,0.9);">
+
+    <!-- Ícone -->
+    <div class="flex justify-center">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);">
+        <span class="material-symbols-outlined text-3xl" style="color:#D4AF37;">shield_person</span>
+      </div>
+    </div>
+
+    <!-- Título -->
+    <div class="text-center">
+      <p class="text-xs font-bold uppercase tracking-[0.2em] mb-1" style="color:#9B7B0E;font-family:'Sora',sans-serif;">LGPD · Art. 11</p>
+      <h2 class="text-lg font-bold" style="color:#F0E8CC;font-family:'Sora',sans-serif;">Dados Biométricos</h2>
+    </div>
+
+    <!-- Explicação -->
+    <div class="rounded-2xl p-4 space-y-2 text-xs" style="background:#141414;color:#888;line-height:1.6;">
+      <p>Esta avaliação coleta <strong style="color:#AAA;">fotografias corporais</strong> e <strong style="color:#AAA;">métricas posturais</strong> (ângulos, desvios e assimetrias identificados por IA).</p>
+      <p>Esses dados são classificados como <strong style="color:#D4AF37;">dados sensíveis</strong> pela Lei 13.709/2018 (LGPD) e exigem consentimento explícito do titular antes do tratamento.</p>
+    </div>
+
+    <!-- Dados coletados -->
+    <ul class="space-y-1 text-xs" style="color:#666;">
+      <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" style="color:#D4AF37;">photo_camera</span>Fotos nas 4 vistas (frente, costas, laterais)</li>
+      <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" style="color:#D4AF37;">analytics</span>Métricas angulares e score postural</li>
+      <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm" style="color:#D4AF37;">history</span>Histórico de avaliações para acompanhamento</li>
+    </ul>
+
+    <!-- Checkbox de confirmação -->
+    <label class="flex items-start gap-3 cursor-pointer">
+      <input type="checkbox" id="lgpd-consent-check" class="mt-0.5 accent-yellow-500 w-4 h-4 shrink-0" onchange="document.getElementById('lgpd-consent-btn').disabled=!this.checked;document.getElementById('lgpd-consent-btn').style.opacity=this.checked?'1':'0.4';" />
+      <span class="text-xs leading-relaxed" style="color:#888;">Confirmo que o cliente foi informado e <strong style="color:#CCC;">autorizou por escrito</strong> a coleta e tratamento dos seus dados biométricos para fins de avaliação postural.</span>
+    </label>
+
+    <!-- Botões -->
+    <button id="lgpd-consent-btn" onclick="confirmLgpdConsent()" disabled style="opacity:0.4;background:linear-gradient(135deg,#F0C040,#D4AF37);color:#080808;" class="w-full py-4 rounded-2xl font-bold text-sm transition-opacity">
+      Autorizar e Iniciar Avaliação
+    </button>
+    <button onclick="cancelLgpdConsent()" class="w-full text-xs text-center py-2 transition-opacity hover:opacity-80" style="color:#555;">
+      Cancelar — voltar ao Dashboard
+    </button>
+
+    <!-- Link política -->
+    <p class="text-center text-[10px]" style="color:#333;">
+      <button onclick="openPrivacidade()" class="underline hover:opacity-80" style="color:#555;">Ver Política de Privacidade completa</button>
+    </p>
+  </div>
+</div>
+
+<!-- ═══ MODAL: POLÍTICA DE PRIVACIDADE ════════════════════════════════════════ -->
+<div id="modal-privacidade" class="hidden fixed inset-0 z-[190]" style="background:rgba(0,0,0,0.9);backdrop-filter:blur(8px);">
+  <div class="absolute inset-x-0 bottom-0 max-w-lg mx-auto rounded-t-3xl flex flex-col" style="background:#0C0C0C;border-top:1px solid rgba(212,175,55,0.2);max-height:90vh;">
+
+    <!-- Handle + Header -->
+    <div class="shrink-0 px-6 pt-4 pb-3 border-b" style="border-color:rgba(255,255,255,0.05);">
+      <div class="flex justify-center mb-3"><div style="width:40px;height:4px;border-radius:99px;background:#2A2A2A;"></div></div>
+      <div class="flex justify-between items-center">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color:#9B7B0E;font-family:'Sora',sans-serif;">LGPD · Lei 13.709/2018</p>
+          <h2 class="text-base font-bold mt-0.5" style="color:#F0E8CC;font-family:'Sora',sans-serif;">Política de Privacidade</h2>
+        </div>
+        <button onclick="closePrivacidade()" class="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform" style="background:#1A1A1A;color:#666;">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Conteúdo rolável -->
+    <div class="flex-1 overflow-y-auto px-6 py-5 space-y-5 text-xs" style="color:#888;line-height:1.7;">
+
+      <section>
+        <h3 class="font-bold text-sm mb-2" style="color:#CCC;">1. Responsável pelo Tratamento</h3>
+        <p>Windson Personal Trainer (CNPJ ou CPF do profissional), Brasil.<br/>Contato: <span style="color:#D4AF37;">windsonwood32@gmail.com</span></p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-sm mb-2" style="color:#CCC;">2. Dados Coletados</h3>
+        <ul class="space-y-1 pl-2">
+          <li>• <strong style="color:#AAA;">Cadastrais:</strong> nome completo, telefone, objetivo de treino</li>
+          <li>• <strong style="color:#AAA;">Agenda:</strong> datas, horários e tipo de sessão</li>
+          <li>• <strong style="color:#AAA;">Financeiros:</strong> valores e status de mensalidades</li>
+          <li>• <strong style="color:#AAA;">Biométricos (dados sensíveis):</strong> fotografias corporais nas 4 vistas e métricas posturais calculadas por IA (ângulos, desvios, score postural)</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-sm mb-2" style="color:#CCC;">3. Finalidade</h3>
+        <p>Os dados são usados exclusivamente para gestão do relacionamento trainer-cliente, elaboração de treinos personalizados e avaliação e acompanhamento postural ao longo do tempo. Nenhum dado é usado para fins comerciais, publicidade ou compartilhado com terceiros.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-sm mb-2" style="color:#CCC;">4. Base Legal (LGPD)</h3>
+        <p>Dados cadastrais e de agenda: <strong style="color:#AAA;">execução de contrato</strong> (art. 7º, V).<br/>
+        Dados biométricos: <strong style="color:#AAA;">consentimento explícito do titular</strong> (art. 11, I), obtido por escrito antes de cada avaliação.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-sm mb-2" style="color:#CCC;">5. Retenção e Exclusão</h3>
+        <p>Os dados são mantidos enquanto durar o vínculo trainer-cliente. Após encerramento, os dados são excluídos em até <strong style="color:#AAA;">30 dias</strong> mediante solicitação formal. Fotos e métricas posturais podem ser excluídas a qualquer momento pelo trainer diretamente no aplicativo.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-sm mb-2" style="color:#CCC;">6. Armazenamento e Segurança</h3>
+        <p>Os dados são armazenados na plataforma <strong style="color:#AAA;">Supabase</strong> (servidores na região us-east-1, EUA), protegidos por autenticação OAuth 2.0, criptografia em trânsito (TLS 1.3) e controle de acesso por Row Level Security. Apenas o profissional autorizado tem acesso.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-sm mb-2" style="color:#CCC;">7. Seus Direitos (LGPD art. 18)</h3>
+        <ul class="space-y-1 pl-2">
+          <li>• Acesso aos seus dados pessoais</li>
+          <li>• Correção de dados incompletos ou incorretos</li>
+          <li>• Exclusão dos dados tratados com base em consentimento</li>
+          <li>• Portabilidade dos dados</li>
+          <li>• Revogação do consentimento a qualquer momento</li>
+        </ul>
+        <p class="mt-2">Para exercer qualquer direito, entre em contato: <span style="color:#D4AF37;">windsonwood32@gmail.com</span></p>
+      </section>
+
+      <p class="text-[10px] pt-2 border-t" style="color:#444;border-color:#1A1A1A;">Atualizado em maio de 2026 · Windson Personal Trainer</p>
+    </div>
+
+    <!-- Botão fechar -->
+    <div class="shrink-0 px-6 py-4 border-t" style="border-color:rgba(255,255,255,0.05);">
+      <button onclick="closePrivacidade()" class="w-full py-4 rounded-2xl font-bold text-sm active:scale-95 transition-transform" style="background:#1A1A1A;color:#888;">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
 
 </body>

@@ -29,6 +29,13 @@ const _meshColors = {
 };
 
 function showTab(tabId) {
+  // Avaliação postural coleta dados biométricos sensíveis (LGPD art. 11).
+  // Exige consentimento por sessão antes de entrar na aba.
+  if (tabId === 'tab-avaliacao' && !sessionStorage.getItem('lgpd_av_consent')) {
+    _openLgpdConsent();
+    return;
+  }
+
   document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
   const section = document.getElementById(tabId);
   section.classList.add('active');
@@ -82,8 +89,44 @@ function closeModal(id) {
   document.getElementById(id).classList.add('hidden');
 }
 
+// ─── LGPD: consentimento para avaliação postural ─────────────────────────────
+
+function _openLgpdConsent() {
+  const check = document.getElementById('lgpd-consent-check');
+  const btn   = document.getElementById('lgpd-consent-btn');
+  if (check) { check.checked = false; }
+  if (btn)   { btn.disabled = true; btn.style.opacity = '0.4'; }
+  document.getElementById('modal-lgpd-consent').classList.remove('hidden');
+}
+
+function confirmLgpdConsent() {
+  sessionStorage.setItem('lgpd_av_consent', '1');
+  document.getElementById('modal-lgpd-consent').classList.add('hidden');
+  showTab('tab-avaliacao');
+}
+
+function cancelLgpdConsent() {
+  document.getElementById('modal-lgpd-consent').classList.add('hidden');
+  showTab('tab-dashboard');
+}
+
+// ─── LGPD: política de privacidade ───────────────────────────────────────────
+
+function openPrivacidade() {
+  document.getElementById('user-menu').classList.add('hidden');
+  document.getElementById('modal-privacidade').classList.remove('hidden');
+}
+
+function closePrivacidade() {
+  document.getElementById('modal-privacidade').classList.add('hidden');
+}
+
 // ─── Exposição global ────────────────────────────────────────────────────────
-window.staggerObserver = staggerObserver;
-window.showTab         = showTab;
-window.openModal       = openModal;
-window.closeModal      = closeModal;
+window.staggerObserver    = staggerObserver;
+window.showTab            = showTab;
+window.openModal          = openModal;
+window.closeModal         = closeModal;
+window.confirmLgpdConsent = confirmLgpdConsent;
+window.cancelLgpdConsent  = cancelLgpdConsent;
+window.openPrivacidade    = openPrivacidade;
+window.closePrivacidade   = closePrivacidade;

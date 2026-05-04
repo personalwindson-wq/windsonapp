@@ -35,7 +35,7 @@ async function fetchClientes() {
       const statusColor = c.status === 'Ativo' ? 'primary' : (c.status === 'Inativo' ? 'error' : 'outline-variant');
 
       const card = document.createElement('div');
-      card.className = 'glass-panel stagger-item rounded-2xl p-6 flex flex-col gap-4 cursor-pointer hover:shadow-[0_0_30px_rgba(212,175,55,0.1)] transition-all';
+      card.className = 'glass-panel stagger-item rounded-2xl p-6 flex flex-col gap-4 hover:shadow-[0_0_30px_rgba(212,175,55,0.1)] transition-all';
       card.innerHTML = `
         <div class="flex items-center gap-4">
           <div class="w-14 h-14 rounded-full bg-${statusColor}/20 flex items-center justify-center text-${statusColor} font-headline font-bold text-xl border border-${statusColor}/30">${init}</div>
@@ -44,8 +44,12 @@ async function fetchClientes() {
             <p class="text-on-surface-variant text-xs font-label">${c.objetivo || 'Sem foco definido'} • ${c.telefone || 'Sem telefone'}</p>
           </div>
         </div>
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap items-center justify-between">
           <span class="px-2 py-1 bg-${statusColor}/10 text-${statusColor} rounded-lg text-xs font-label border border-${statusColor}/20">${c.status || 'Pendente'}</span>
+          <button onclick="deleteClienteData('${c.id}','${(c.nome_completo||'').replace(/'/g,'')}')" class="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-label transition-colors hover:bg-error/10 active:scale-95" style="color:#666;" title="Excluir todos os dados (LGPD)">
+            <span class="material-symbols-outlined text-sm">delete</span>
+            Excluir dados
+          </button>
         </div>
       `;
       grid.appendChild(card);
@@ -449,7 +453,44 @@ async function fetchFinanceiro() {
   }).join('');
 }
 
+// ─── Exclusão de dados (LGPD art. 18 — direito ao esquecimento) ──────────────
+
+async function deleteClienteData(id, nome) {
+  const confirmado = window.confirm(
+    `Excluir TODOS os dados de "${nome}"?\n\n` +
+    `Isso removerá permanentemente:\n` +
+    `• Cadastro e perfil\n` +
+    `• Agendamentos\n` +
+    `• Treinos\n` +
+    `• Avaliações posturais\n` +
+    `• Histórico financeiro\n\n` +
+    `Esta ação não pode ser desfeita.`
+  );
+  if (!confirmado) return;
+
+  // Deleções em paralelo (CASCADE no banco já cuida das FK, mas excluímos
+  // explicitamente para garantir em caso de policies futuras que bloqueiem CASCADE).
+  const [r1, r2, r3, r4] = await Promise.all([
+    sbClient.from('agendamentos').delete().eq('cliente_id', id),
+    sbClient.from('treinos').delete().eq('cliente_id', id),
+    sbClient.from('avaliacoes_historico').delete().eq('cliente_id', id),
+    sbClient.from('financeiro').delete().eq('cliente_id', id),
+  ]);
+
+  const erros = [r1, r2, r3, r4].filter(r => r.error).map(r => r.error.message);
+  if (erros.length) {
+    alert('Erro ao excluir dados relacionados:\n' + erros.join('\n'));
+    return;
+  }
+
+  const { error } = await sbClient.from('clientes').delete().eq('id', id);
+  if (error) { alert('Erro ao excluir cliente: ' + error.message); return; }
+
+  fetchClientes();
+}
+
 // ─── Exposição global ─────────────────────────────────────────────────────────
+window.deleteClienteData         = deleteClienteData;
 window.fetchClientes             = fetchClientes;
 window.createCliente             = createCliente;
 window.populateAgendamentoSelect = populateAgendamentoSelect;
