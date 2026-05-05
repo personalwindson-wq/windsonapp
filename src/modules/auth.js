@@ -21,12 +21,14 @@ const ALLOWED_EMAILS = [
   'gustavolima281189@gmail.com',
   'julio.cborges2@gmail.com',
   'personalwindson@gmail.com',
+  'nronaldocezar@gmail.com',
+  'empreendimentos2708@gmail.com',
 ];
 
 // ─── Gatekeeper ──────────────────────────────────────────────────────────────
 
 function checkAccess(email) {
-  return ALLOWED_EMAILS.includes(email);
+  return ALLOWED_EMAILS.map(e => e.toLowerCase()).includes((email || '').toLowerCase());
 }
 
 // ─── OAuth ───────────────────────────────────────────────────────────────────
@@ -117,6 +119,8 @@ function init() {
   });
 
   sbClient.auth.onAuthStateChange((event, session) => {
+    console.log('[Auth] onAuthStateChange event:', event, '| session:', session ? session.user?.email : 'null');
+
     if (!session) {
       document.body.classList.remove('authenticated');
       document.getElementById('login-screen').classList.remove('hidden');
@@ -131,6 +135,8 @@ function init() {
       given_name: payload.name || (payload.full_name ? payload.full_name.split(' ')[0] : 'Admin')
     };
 
+    console.log('[Auth] Email recebido do Google:', user.email, '| Acesso permitido:', checkAccess(user.email));
+
     if (!checkAccess(user.email)) {
       _showLoginError(user.email);
       sbClient.auth.signOut();
@@ -143,9 +149,32 @@ function init() {
     _showApp(user);
 
     if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-      // Borges Brain OS — inicialização completa do dashboard
       if (typeof window.fetchDashboard === 'function') window.fetchDashboard();
       if (typeof window.fetchClientes  === 'function') window.fetchClientes();
+    }
+  });
+
+  // Fallback: captura sessão existente caso onAuthStateChange perca o INITIAL_SESSION
+  // (ocorre frequentemente após redirect OAuth)
+  sbClient.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      console.log('[Auth] getSession fallback — sessão encontrada:', session.user.email);
+      const payload = session.user.user_metadata || {};
+      const user = {
+        name:       payload.full_name || session.user.email,
+        email:      session.user.email,
+        picture:    payload.avatar_url || '',
+        given_name: payload.name || (payload.full_name ? payload.full_name.split(' ')[0] : 'Admin')
+      };
+      if (checkAccess(user.email)) {
+        _showApp(user);
+        if (typeof window.fetchDashboard === 'function') window.fetchDashboard();
+        if (typeof window.fetchClientes  === 'function') window.fetchClientes();
+      } else {
+        console.warn('[Auth] Email bloqueado pelo getSession fallback:', user.email);
+      }
+    } else {
+      console.log('[Auth] getSession fallback — nenhuma sessão ativa');
     }
   });
 }
