@@ -49,15 +49,21 @@ body {
 }
 
 @keyframes shimmer {
-  0%   { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 .skeleton-shimmer {
   background: #111;
-  background-image: linear-gradient(90deg, #111 0px, rgba(212,175,55,0.05) 50%, #111 100%);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
+  position: relative;
+  overflow: hidden;
   border-radius: 12px;
+}
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.05) 50%, transparent 100%);
+  animation: shimmer 2s infinite linear;
 }
 
 .stagger-item {
@@ -68,6 +74,40 @@ body {
 .stagger-show {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Exercise description — 3-line clamp with toggle */
+.desc-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Dashboard agenda card stagger entrance */
+@keyframes agendaIn {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.agenda-card-enter {
+  animation: agendaIn 400ms ease-out both;
+}
+
+/* Quick-action buttons: fitness photo background with dark overlay */
+.quick-btn {
+  position: relative;
+  overflow: hidden;
+}
+.quick-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 0;
+}
+.quick-btn > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Hidden utility — overrides competing display classes (e.g. flex + hidden) */
@@ -260,12 +300,22 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Sora', sans-serif; }
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   box-shadow: 0 0 0 1px rgba(212,175,55,0.08), 0 32px 64px rgba(0,0,0,0.8), 0 0 48px rgba(212,175,55,0.15);
+}
+#splash-icon::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 32px;
+  box-shadow: 0 0 64px rgba(212,175,55,0.28);
+  opacity: 0.3;
   animation: iconPulse 2s 1.2s ease-in-out infinite;
+  pointer-events: none;
 }
 @keyframes iconPulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.08), 0 32px 64px rgba(0,0,0,0.8), 0 0 48px rgba(212,175,55,0.12); }
-  50%       { box-shadow: 0 0 0 1px rgba(212,175,55,0.20), 0 32px 64px rgba(0,0,0,0.8), 0 0 64px rgba(212,175,55,0.28); }
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
 }
 
 #splash-wordmark {
@@ -315,11 +365,13 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Sora', sans-serif; }
 }
 #splash-bar {
   height: 100%;
-  width: 0%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
   background: linear-gradient(90deg, #9B7B0E, #F0C040, #D4AF37);
   border-radius: 999px;
   box-shadow: 0 0 8px rgba(212,175,55,0.50);
-  transition: width 0.4s var(--ease-out);
+  transition: transform 0.4s var(--ease-out);
 }
 #splash-tag {
   font-family: 'Inter', sans-serif;
@@ -332,8 +384,9 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Sora', sans-serif; }
 
 #windson-splash.splash-exit {
   animation: splashExit 0.7s var(--ease-out) forwards;
+  pointer-events: none;
 }
 @keyframes splashExit {
   0%   { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.06); pointer-events: none; }
+  100% { opacity: 0; transform: scale(1.06); }
 }
