@@ -89,6 +89,23 @@ function renderExerciseCard(ex) {
              style="background:${lvl.bg};color:${lvl.color};border:1px solid ${lvl.border};">${lvl.label}</span>`
     : '';
 
+  const rawDesc = Array.isArray(ex.instructions) && ex.instructions.length
+    ? ex.instructions.join(' ')
+    : '';
+  const descBlock = rawDesc.length > 150
+    ? (() => {
+        const descId = cardId + '-desc';
+        return `<div>
+          <p id="${descId}" class="desc-clamp text-[11px] leading-relaxed" style="color:#aaa;">${rawDesc}</p>
+          <button onclick="(function(el,btn){const clamped=el.classList.contains('desc-clamp');el.classList.toggle('desc-clamp',!clamped);btn.textContent=clamped?'ver menos':'ver mais';})(document.getElementById('${descId}'),this)"
+                  class="mt-1 text-sm font-medium"
+                  style="color:#D4AF37;text-align:left;">ver mais</button>
+        </div>`;
+      })()
+    : rawDesc.length > 0
+      ? `<p class="text-[11px] leading-relaxed" style="color:#aaa;">${rawDesc}</p>`
+      : '';
+
   const instructionsBlock = steps.length
     ? `<div id="${cardId}-inst" style="display:none;" class="mt-1 flex flex-col gap-2">
         ${steps.map((s, i) => `
@@ -120,6 +137,7 @@ function renderExerciseCard(ex) {
               style="background:rgba(255,255,255,0.05);color:#777;border:1px solid rgba(255,255,255,0.07);">${equipment}</span>
         ${levelBadge}
       </div>
+      ${descBlock}
       ${instructionsBlock}
       <button onclick="exBankAddToWorkout('${safeName}')"
               class="mt-auto w-full py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95"
