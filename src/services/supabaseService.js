@@ -169,7 +169,7 @@ async function fetchDashboard() {
     const d    = new Date(ag.data_hora_inicio);
     const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     el.innerHTML += `
-      <div class="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 cursor-pointer">
+      <div class="agenda-card-item flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 cursor-pointer">
         <div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant/30 relative shrink-0" style="background:#141414;">
           <span class="absolute inset-0 flex items-center justify-center font-bold text-[#D4AF37]">${ag.clientes?.nome_completo?.charAt(0) || '?'}</span>
         </div>
@@ -183,6 +183,14 @@ async function fetchDashboard() {
         </div>
       </div>
     `;
+  });
+
+  // Apply stagger entrance animation to agenda cards
+  requestAnimationFrame(() => {
+    el.querySelectorAll('.agenda-card-item').forEach((card, i) => {
+      card.classList.add('agenda-card-enter');
+      card.style.animationDelay = `${i * 80}ms`;
+    });
   });
 }
 
