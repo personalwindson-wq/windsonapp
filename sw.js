@@ -1,4 +1,4 @@
-const CACHE_NAME   = 'windson-pt-v7';
+const CACHE_NAME   = 'windson-pt-v8';
 const STATIC_CACHE = [
   './manifest.json', 
   './icon.svg', 
@@ -46,7 +46,8 @@ self.addEventListener('fetch', event => {
       fetch(event.request)
         .then(response => {
           if (response && response.status === 200) {
-            caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
+            const cloned = response.clone();
+            caches.open(CACHE_NAME).then(c => c.put(event.request, cloned));
           }
           return response;
         })
@@ -61,7 +62,8 @@ self.addEventListener('fetch', event => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
         if (response && response.status === 200) {
-          caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, cloned));
         }
         return response;
       }).catch(() => caches.match('./index.html'));
