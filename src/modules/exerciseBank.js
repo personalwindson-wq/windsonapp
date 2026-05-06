@@ -24,7 +24,7 @@ async function fetchExercises() {
 
   const { data, error } = await sbClient
     .from('exercises')
-    .select('id, name, name_pt, target_muscle, secondary_muscles, equipment, level, force_type, mechanic, category, gif_url, image_url_2, instructions')
+    .select('id, name, name_pt, target_muscle, secondary_muscles, equipment, level, force_type, mechanic, category, gif_url, image_url_2, instructions, instructions_pt')
     .order('name', { ascending: true });
 
   if (error) throw error;
@@ -117,7 +117,9 @@ function renderExerciseCard(ex) {
   const img0      = ex.gif_url     || '';
   const img1      = ex.image_url_2 || '';
   const lvl       = _LEVEL_BADGE[ex.level] || null;
-  const steps     = Array.isArray(ex.instructions) ? ex.instructions : [];
+  const steps     = Array.isArray(ex.instructions_pt) && ex.instructions_pt.length
+                      ? ex.instructions_pt
+                      : Array.isArray(ex.instructions) ? ex.instructions : [];
   const cardId    = 'ex-' + Math.random().toString(36).slice(2, 8);
 
   const imgSection = (img0 && img1)
