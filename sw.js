@@ -1,4 +1,4 @@
-const CACHE_NAME   = 'windson-pt-v9';
+const CACHE_NAME   = 'windson-pt-v10';
 const STATIC_CACHE = [
   './manifest.json',
   './icon.svg',

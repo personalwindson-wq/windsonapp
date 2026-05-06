@@ -192,37 +192,45 @@
     </div>
   </section>
   <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <button onclick="showTab('tab-clientes')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(212,175,55,0.1)] text-left">
-      <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      <div class="flex justify-between items-start z-10">
-        <div class="w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/10">
+    <!-- CLIENTES -->
+    <button onclick="showTab('tab-clientes')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(212,175,55,0.18)] text-left">
+      <div class="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-110" style="background-image:url('/src/assets/img/clientes.jpg');background-size:cover;background-position:center;opacity:0.55;filter:saturate(0.8);"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div class="flex justify-between items-start relative z-10">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.3);backdrop-filter:blur(8px);">
           <span class="material-symbols-outlined text-primary text-3xl">groups</span>
         </div>
-        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">arrow_outward</span>
+        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors duration-300">arrow_outward</span>
       </div>
-      <div class="z-10 mt-auto">
-        <h3 class="font-headline text-2xl font-bold text-on-surface mb-2">Clientes</h3>
+      <div class="relative z-10 mt-auto">
+        <h3 class="font-headline text-2xl font-bold text-on-surface mb-1">Clientes</h3>
         <p class="font-body text-sm text-on-surface-variant">Gerenciar base e novos cadastros</p>
       </div>
     </button>
-    <button onclick="showTab('tab-avaliacao')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(212,175,55,0.1)] text-left">
-      <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-10 mix-blend-luminosity"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-surface-variant/90 to-transparent"></div>
-      <div class="flex justify-between items-start z-10">
-        <div class="w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/10">
-          <span class="material-symbols-outlined text-tertiary text-3xl">accessibility_new</span>
+    <!-- AVALIAÇÃO POSTURAL -->
+    <button onclick="showTab('tab-avaliacao')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(212,175,55,0.18)] text-left">
+      <div class="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-110" style="background-image:url('/src/assets/img/postural.jpg');background-size:cover;background-position:center;opacity:0.55;filter:saturate(0.8);"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div class="flex justify-between items-start relative z-10">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.3);backdrop-filter:blur(8px);">
+          <span class="material-symbols-outlined text-primary text-3xl">accessibility_new</span>
         </div>
-        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary transition-colors">arrow_outward</span>
+        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors duration-300">arrow_outward</span>
       </div>
-      <div class="z-10 mt-auto">
-        <h3 class="font-headline text-2xl font-bold text-on-surface mb-2">Avaliação Postural</h3>
+      <div class="relative z-10 mt-auto">
+        <h3 class="font-headline text-2xl font-bold text-on-surface mb-1">Avaliação Postural</h3>
         <p class="font-body text-sm text-on-surface-variant">Análise cinemática e relatórios</p>
       </div>
     </button>
-    <button onclick="showTab('tab-treinos')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(212,175,55,0.1)] md:col-span-1 text-left">
-      <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      <div class="flex justify-between items-start z-10">
-        <div class="w-14 h-14 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/10">
+    <!-- TREINOS -->
+    <button onclick="showTab('tab-treinos')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(212,175,55,0.18)] text-left">
+      <div class="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-110" style="background-image:url('/src/assets/img/treino.jpg');background-size:cover;background-position:center;opacity:0.55;filter:saturate(0.8);"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div class="flex justify-between items-start relative z-10">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.3);backdrop-filter:blur(8px);">
           <span class="material-symbols-outlined text-primary text-3xl">fitness_center</span>
         </div>
         <div class="flex flex-col items-end">
@@ -230,13 +238,17 @@
           <span class="font-body text-[10px] uppercase text-on-surface-variant tracking-wider">Ativos</span>
         </div>
       </div>
-      <div class="z-10 mt-auto">
-        <h3 class="font-headline text-2xl font-bold text-on-surface mb-2">Treinos</h3>
+      <div class="relative z-10 mt-auto">
+        <h3 class="font-headline text-2xl font-bold text-on-surface mb-1">Treinos</h3>
         <p class="font-body text-sm text-on-surface-variant">Periodização e prescrição</p>
       </div>
     </button>
-    <button onclick="showTab('tab-financeiro')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden text-left">
-      <div class="z-10">
+    <!-- VOLUME SEMANAL / FINANCEIRO -->
+    <button onclick="showTab('tab-financeiro')" class="glass-panel rounded-[32px] p-8 flex flex-col justify-between group h-64 relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_50px_rgba(212,175,55,0.18)] text-left">
+      <div class="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-110" style="background-image:url('/src/assets/img/volume.jpg');background-size:cover;background-position:center;opacity:0.48;filter:saturate(0.75);"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/20"></div>
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div class="relative z-10">
         <h3 class="font-headline text-lg font-bold text-on-surface mb-6">Volume Semanal</h3>
         <div class="flex items-end gap-2 h-24">
           <div class="w-full bg-surface-container-lowest rounded-t-sm h-[40%] relative"><div class="absolute bottom-0 w-full bg-outline-variant/30 h-full rounded-t-sm"></div></div>
@@ -249,7 +261,7 @@
           <span>Seg</span><span>Ter</span><span>Qua</span><span class="text-primary font-bold">Qui</span><span>Sex</span>
         </div>
       </div>
-      <p class="text-xs text-on-surface-variant mt-4">Toque para ver Financeiro →</p>
+      <p class="text-xs text-on-surface-variant relative z-10">Toque para ver Financeiro →</p>
     </button>
   </section>
 </main>
