@@ -23,6 +23,7 @@ const ALLOWED_EMAILS = [
   'personalwindson@gmail.com',
   'nronaldocezar@gmail.com',
   'empreendimentos2708@gmail.com',
+  'teste@windson.app',
 ];
 
 // ─── Gatekeeper ──────────────────────────────────────────────────────────────
@@ -57,6 +58,32 @@ async function signInWithApple() {
     if (error) throw error;
   } catch (err) {
     alert('Erro ao conectar com Apple: ' + err.message);
+  }
+}
+
+async function loginWithEmail(event) {
+  event.preventDefault();
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn      = document.getElementById('email-login-btn');
+  const errEl    = document.getElementById('login-error-msg');
+
+  btn.textContent = 'Entrando...';
+  btn.disabled = true;
+  if (errEl) errEl.classList.add('hidden');
+
+  try {
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    // onAuthStateChange vai cuidar do resto
+  } catch (err) {
+    if (errEl) {
+      errEl.textContent = err.message || 'Email ou senha incorretos';
+      errEl.classList.remove('hidden');
+    }
+  } finally {
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
   }
 }
 
@@ -182,6 +209,7 @@ function init() {
 // ─── Exposição global (Opção A — compatibilidade com onclick do HTML) ─────────
 window.signInWithGoogle = signInWithGoogle;
 window.signInWithApple  = signInWithApple;
+window.loginWithEmail   = loginWithEmail;
 window.toggleUserMenu   = toggleUserMenu;
 window.logout           = logout;
 

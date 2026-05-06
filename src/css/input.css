@@ -215,7 +215,7 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Sora', sans-serif; }
   box-shadow: var(--shadow-hover), var(--shadow-glow-gold);
   transform: translateY(-2px);
 }
-.glass-panel > * { position: relative; z-index: 1; }
+.glass-panel > *:not(.absolute) { position: relative; z-index: 1; }
 
 /* Gradients */
 .gradient-text, .primary-gradient-text, .text-primary-gradient {
@@ -231,6 +231,8 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Sora', sans-serif; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 0; background: transparent; }
+
+/* ─── DASHBOARD CARD BACKGROUNDS ──────────────────────────────────────────── */
 
 /* ─── SPLASH SCREEN ────────────────────────────────────────────────────────── */
 #windson-splash {

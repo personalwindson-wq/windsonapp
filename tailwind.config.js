@@ -5,6 +5,12 @@ module.exports = {
     "./index.html",
     "./src/**/*.js",
   ],
+  safelist: [
+    'card-bg-clientes',
+    'card-bg-postural',
+    'card-bg-treino',
+    'card-bg-volume',
+  ],
   theme: {
     extend: {
       colors: {
