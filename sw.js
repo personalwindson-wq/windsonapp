@@ -1,12 +1,12 @@
-const CACHE_NAME   = 'windson-pt-v10';
+const CACHE_NAME   = 'windson-pt-v11';
 const STATIC_CACHE = [
-  './manifest.json',
-  './icon.svg',
-  './dist/style.css',
-  './src/assets/img/clientes.jpg',
-  './src/assets/img/postural.jpg',
-  './src/assets/img/treino.jpg',
-  './src/assets/img/volume.jpg'
+  '/manifest.json',
+  '/icon.svg',
+  '/dist/style.css',
+  '/src/assets/img/clientes.jpg',
+  '/src/assets/img/postural.jpg',
+  '/src/assets/img/treino.jpg',
+  '/src/assets/img/volume.jpg'
 ];
 
 // Install: cache estático de forma resiliente (falha individual não quebra o SW)
@@ -74,7 +74,7 @@ self.addEventListener('fetch', event => {
         return response;
       }).catch(() => null);
 
-      return cached || networkFetch || caches.match('./index.html');
+      return cached || networkFetch;
     })
   );
 });
