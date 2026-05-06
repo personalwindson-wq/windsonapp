@@ -74,8 +74,14 @@ function translate(text) {
         try {
           const d = JSON.parse(raw);
           const translated = d?.responseData?.translatedText;
-          // MyMemory às vezes retorna em maiúsculas — normaliza
-          resolve(translated && translated !== text.toUpperCase() ? translated : null);
+          // Rejeita só quando a API devolve exatamente o texto original (não traduziu)
+          if (!translated || translated.toLowerCase() === text.toLowerCase()) {
+            resolve(null);
+          } else {
+            // Normaliza para title case (MyMemory às vezes retorna ALLCAPS)
+            const norm = translated.charAt(0).toUpperCase() + translated.slice(1).toLowerCase();
+            resolve(norm);
+          }
         } catch { resolve(null); }
       });
     });

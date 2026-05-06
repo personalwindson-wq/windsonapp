@@ -24,7 +24,7 @@ async function fetchExercises() {
 
   const { data, error } = await sbClient
     .from('exercises')
-    .select('id, name, name_pt, target_muscle, secondary_muscles, equipment, level, force_type, mechanic, category, gif_url, image_url_2, instructions, instructions_pt')
+    .select('id, name, name_pt, target_muscle, secondary_muscles, equipment, level, force_type, mechanic, category, gif_url, image_url_2, instructions')
     .order('name', { ascending: true });
 
   if (error) throw error;
@@ -81,7 +81,7 @@ const _MUSCLE_PT = {
 const _EQUIP_PT = {
   'barbell': 'Barra', 'dumbbell': 'Haltere', 'dumbbells': 'Halteres',
   'cable': 'Polia', 'machine': 'Máquina', 'body weight': 'Peso Corporal',
-  'bodyweight': 'Peso Corporal', 'kettlebell': 'Kettlebell', 'band': 'Elástico',
+  'bodyweight': 'Peso Corporal', 'kettlebell': 'Kettlebell', 'kettlebells': 'Kettlebells', 'band': 'Elástico',
   'resistance band': 'Elástico', 'medicine ball': 'Bola Medicinal',
   'stability ball': 'Bola de Estabilidade', 'ez barbell': 'Barra EZ',
   'ez bar': 'Barra EZ', 'smith machine': 'Smith Machine',
