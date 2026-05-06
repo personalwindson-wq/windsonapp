@@ -130,14 +130,55 @@ async function createAgendamento() {
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
+let _dashboardData = [];
+
+function _renderDashboardCard(ag) {
+  const d   = new Date(ag.data_hora_inicio);
+  const df  = ag.data_hora_fim ? new Date(ag.data_hora_fim) : null;
+  const t1  = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const t2  = df ? df.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+  const timeStr     = df ? `${t1} – ${t2}` : t1;
+  const isAv        = ag.tipo === 'Avaliação';
+  const isCancelado = ag.status === 'Cancelado';
+  const borderCls   = isCancelado ? 'border-l-outline-variant' : (isAv ? 'border-l-tertiary' : 'border-l-primary-container');
+  const typeCls     = isCancelado ? 'text-outline'             : (isAv ? 'text-tertiary'      : 'text-primary-container');
+  const cancelBtn   = isCancelado ? '' : `
+    <button onclick="cancelarAgendamento('${ag.id}')"
+            class="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition-colors hover:bg-error/10 active:scale-95"
+            style="color:#666;" title="Cancelar sessão">
+      <span class="material-symbols-outlined text-sm">event_busy</span>Cancelar
+    </button>`;
+  return `
+    <div class="glass-panel rounded-xl p-4 border-l-4 ${borderCls} flex flex-col gap-1 hover:bg-white/5 transition-colors ${isCancelado ? 'opacity-50' : ''}">
+      <div class="flex justify-between items-center">
+        <span class="text-xs font-label uppercase tracking-wider ${typeCls} font-semibold">${ag.tipo}</span>
+        <span class="text-xs text-on-surface-variant font-label">${timeStr}</span>
+      </div>
+      <h4 class="text-on-surface font-headline font-semibold text-lg leading-tight">${ag.clientes?.nome_completo || 'Cliente'}</h4>
+      <div class="flex items-center justify-between mt-1">
+        ${ag.status ? `<span class="text-xs text-outline">${ag.status}</span>` : '<span></span>'}
+        ${cancelBtn}
+      </div>
+    </div>`;
+}
+
+function _renderDashboardList(data) {
+  const el = document.getElementById('dashboard-agenda-list');
+  if (!el) return;
+  if (!data.length) {
+    el.innerHTML = '<p class="text-sm p-4 text-center" style="color:#555;">Nenhum agendamento para hoje.</p>';
+    return;
+  }
+  el.innerHTML = data.map(_renderDashboardCard).join('');
+}
+
 async function fetchDashboard() {
   const el = document.getElementById('dashboard-agenda-list');
   if (!el) return;
 
   el.innerHTML = `
     <div class="skeleton-shimmer h-20 w-full rounded-xl"></div>
-    <div class="skeleton-shimmer h-20 w-full rounded-xl mt-2"></div>
-  `;
+    <div class="skeleton-shimmer h-20 w-full rounded-xl mt-2"></div>`;
 
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const end   = new Date(); end.setHours(23, 59, 59, 999);
@@ -153,40 +194,31 @@ async function fetchDashboard() {
     return;
   }
 
-  const subtitle = document.getElementById('dashboard-sessoes-subtitle');
-  if (subtitle) {
-    const n = data.length;
-    subtitle.textContent = n === 0
-      ? 'Nenhuma sessão hoje'
-      : `${n} ${n === 1 ? 'sessão' : 'sessões'} agendadas hoje`;
-  }
+  _dashboardData = data;
 
-  if (data.length === 0) {
-    el.innerHTML = '<p class="text-sm text-outline p-4 text-center">Nenhum agendamento para hoje.</p>';
-    return;
-  }
+  // Atualiza contadores
+  const sessoes    = data.filter(a => a.tipo !== 'Avaliação').length;
+  const avaliacoes = data.filter(a => a.tipo === 'Avaliação').length;
+  const csEl = document.getElementById('dash-count-sessoes');
+  const caEl = document.getElementById('dash-count-avaliacoes');
+  if (csEl) csEl.textContent = String(sessoes).padStart(2, '0');
+  if (caEl) caEl.textContent = String(avaliacoes).padStart(2, '0');
 
-  el.innerHTML = '';
-  data.forEach(ag => {
-    const d    = new Date(ag.data_hora_inicio);
-    const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    el.innerHTML += `
-      <div class="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 cursor-pointer">
-        <div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant/30 relative shrink-0" style="background:#141414;">
-          <span class="absolute inset-0 flex items-center justify-center font-bold text-[#D4AF37]">${ag.clientes?.nome_completo?.charAt(0) || '?'}</span>
-        </div>
-        <div class="flex-1">
-          <p class="font-bold text-base text-on-surface leading-tight">${ag.clientes?.nome_completo || 'Cliente'}</p>
-          <p class="text-sm text-on-surface-variant leading-tight">${ag.tipo}</p>
-        </div>
-        <div class="text-right">
-          <p class="font-bold text-[#D4AF37] font-['Sora']">${time}</p>
-          <p class="text-xs text-outline font-medium">${ag.status || ''}</p>
-        </div>
-      </div>
-    `;
-  });
+  // Reseta filtro para "Todos"
+  document.querySelectorAll('.dash-filter-btn').forEach(b => b.classList.remove('dash-filter-active'));
+  const allBtn = document.getElementById('dash-filter-all');
+  if (allBtn) allBtn.classList.add('dash-filter-active');
+
+  _renderDashboardList(data);
 }
+
+window.dashFilterAgenda = function(tipo) {
+  document.querySelectorAll('.dash-filter-btn').forEach(b => b.classList.remove('dash-filter-active'));
+  const keyMap = { '': 'all', 'Treino': 'treino', 'Avaliação': 'avaliacao', 'Reavaliação': 'reavaliacao' };
+  const btn = document.getElementById(`dash-filter-${keyMap[tipo]}`);
+  if (btn) btn.classList.add('dash-filter-active');
+  _renderDashboardList(tipo ? _dashboardData.filter(a => a.tipo === tipo) : _dashboardData);
+};
 
 // ─── Agenda ──────────────────────────────────────────────────────────────────
 
