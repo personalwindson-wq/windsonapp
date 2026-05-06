@@ -354,8 +354,9 @@ async function _avSaveAndHistory(meas, nome) {
   const sbClient = window.sbClient;
   if (!sbClient) return;
 
-  // Salva avaliação no banco
+  // Salva avaliação no banco (cliente_id null — avaliação pelo nome digitado)
   await sbClient.from('avaliacoes_historico').insert([{
+    cliente_id:   null,
     cliente_nome: nome,
     score:        score,
     medicoes:     meas

@@ -119,8 +119,10 @@ async function createAgendamento() {
   if (error) { alert('Erro ao agendar: ' + error.message); return; }
 
   window.closeModal('modal-novo-agendamento');
-  document.getElementById('na-data').value = '';
+  document.getElementById('na-cliente').value = '';
+  document.getElementById('na-data').value    = '';
   const repetirEl = document.getElementById('na-repetir'); if (repetirEl) repetirEl.checked = false;
+  const semanasEl = document.getElementById('na-semanas'); if (semanasEl) semanasEl.value = '4';
   document.getElementById('na-semanas-wrap')?.classList.add('hidden');
   if (typeof window.fetchDashboard === 'function') window.fetchDashboard();
   if (typeof window.fetchAgenda    === 'function') window.fetchAgenda();
@@ -169,7 +171,7 @@ async function fetchDashboard() {
     const d    = new Date(ag.data_hora_inicio);
     const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     el.innerHTML += `
-      <div class="agenda-card-item flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 cursor-pointer">
+      <div class="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 cursor-pointer">
         <div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant/30 relative shrink-0" style="background:#141414;">
           <span class="absolute inset-0 flex items-center justify-center font-bold text-[#D4AF37]">${ag.clientes?.nome_completo?.charAt(0) || '?'}</span>
         </div>
@@ -183,14 +185,6 @@ async function fetchDashboard() {
         </div>
       </div>
     `;
-  });
-
-  // Apply stagger entrance animation to agenda cards
-  requestAnimationFrame(() => {
-    el.querySelectorAll('.agenda-card-item').forEach((card, i) => {
-      card.classList.add('agenda-card-enter');
-      card.style.animationDelay = `${i * 80}ms`;
-    });
   });
 }
 
@@ -595,14 +589,15 @@ async function deleteClienteData(id, nome) {
 
   // Deleções em paralelo (CASCADE no banco já cuida das FK, mas excluímos
   // explicitamente para garantir em caso de policies futuras que bloqueiem CASCADE).
-  const [r1, r2, r3, r4] = await Promise.all([
+  const [r1, r2, r3, r4, r5] = await Promise.all([
     sbClient.from('agendamentos').delete().eq('cliente_id', id),
     sbClient.from('treinos').delete().eq('cliente_id', id),
     sbClient.from('avaliacoes_historico').delete().eq('cliente_id', id),
-    sbClient.from('financeiro').delete().eq('cliente_id', id),
+    sbClient.from('avaliacoes_historico').delete().eq('cliente_nome', nome),
+    sbClient.from('pagamentos').delete().eq('cliente_id', id),
   ]);
 
-  const erros = [r1, r2, r3, r4].filter(r => r.error).map(r => r.error.message);
+  const erros = [r1, r2, r3, r4, r5].filter(r => r.error).map(r => r.error.message);
   if (erros.length) {
     alert('Erro ao excluir dados relacionados:\n' + erros.join('\n'));
     return;
