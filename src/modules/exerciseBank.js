@@ -45,7 +45,8 @@ function searchExercises(query) {
   const q = query.toLowerCase().trim();
   if (!q) return _exercises;
   return _exercises.filter(ex =>
-    ex.name?.toLowerCase().includes(q)         ||
+    ex.name_pt?.toLowerCase().includes(q)       ||
+    ex.name?.toLowerCase().includes(q)          ||
     ex.target_muscle?.toLowerCase().includes(q) ||
     ex.equipment?.toLowerCase().includes(q)
   );
@@ -61,11 +62,57 @@ const _LEVEL_BADGE = {
   expert:       { label: 'Expert',        color: '#c084fc', bg: 'rgba(192,132,252,0.12)', border: 'rgba(192,132,252,0.3)' },
 };
 
+// Mapas de tradução EN → PT para grupos musculares e equipamentos
+const _MUSCLE_PT = {
+  'chest': 'Peitoral', 'back': 'Dorsal', 'upper back': 'Dorsal Superior',
+  'middle back': 'Dorsal Médio', 'lower back': 'Lombar', 'lats': 'Latíssimo',
+  'shoulders': 'Ombros', 'delts': 'Deltóides', 'deltoids': 'Deltóides',
+  'biceps': 'Bíceps', 'triceps': 'Tríceps', 'forearms': 'Antebraços',
+  'upper arms': 'Braços', 'abs': 'Abdômen', 'core': 'Core',
+  'upper legs': 'Pernas', 'quads': 'Quadríceps', 'quadriceps': 'Quadríceps',
+  'hamstrings': 'Isquiotibiais', 'glutes': 'Glúteos', 'lower legs': 'Panturrilha',
+  'calves': 'Panturrilha', 'neck': 'Pescoço', 'waist': 'Cintura',
+  'full body': 'Corpo Completo', 'cardiovascular system': 'Cardiovascular',
+  'serratus anterior': 'Serrátil Anterior', 'adductors': 'Adutores',
+  'abductors': 'Abdutores', 'pectorals': 'Peitoral', 'trapezius': 'Trapézio',
+  'hip flexors': 'Flexores do Quadril', 'spine': 'Coluna',
+};
+
+const _EQUIP_PT = {
+  'barbell': 'Barra', 'dumbbell': 'Haltere', 'dumbbells': 'Halteres',
+  'cable': 'Polia', 'machine': 'Máquina', 'body weight': 'Peso Corporal',
+  'bodyweight': 'Peso Corporal', 'kettlebell': 'Kettlebell', 'band': 'Elástico',
+  'resistance band': 'Elástico', 'medicine ball': 'Bola Medicinal',
+  'stability ball': 'Bola de Estabilidade', 'ez barbell': 'Barra EZ',
+  'ez bar': 'Barra EZ', 'smith machine': 'Smith Machine',
+  'leverage machine': 'Máquina', 'rope': 'Corda', 'roller': 'Foam Roller',
+  'bosu ball': 'Bosu Ball', 'suspension': 'Suspensão (TRX)', 'trap bar': 'Trap Bar',
+  'sled': 'Trenó', 'bench': 'Banco', 'assisted': 'Assistido',
+  'weighted': 'Com Peso', 'olympic barbell': 'Barra Olímpica', 'hammer': 'Martelo',
+};
+
+// Título sem o bug \b\w que capitaliza letras após acentos (ex: "BraçO")
+function _titleCase(s) {
+  if (!s) return '—';
+  return s.split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w).join(' ');
+}
+
+function _translateMuscle(s) {
+  if (!s) return '—';
+  const key = s.toLowerCase().trim();
+  return _MUSCLE_PT[key] || _titleCase(s);
+}
+
+function _translateEquip(s) {
+  if (!s) return '—';
+  const key = s.toLowerCase().trim();
+  return _EQUIP_PT[key] || _titleCase(s);
+}
+
 function renderExerciseCard(ex) {
-  const cap       = s => s ? s.replace(/\b\w/g, c => c.toUpperCase()) : '—';
-  const name      = ex.name_pt ? cap(ex.name_pt) : cap(ex.name);
-  const muscle    = cap(ex.target_muscle);
-  const equipment = cap(ex.equipment);
+  const name      = ex.name_pt ? _titleCase(ex.name_pt) : _titleCase(ex.name);
+  const muscle    = _translateMuscle(ex.target_muscle);
+  const equipment = _translateEquip(ex.equipment);
   const safeName  = name.replace(/'/g, "\\'");
   const img0      = ex.gif_url     || '';
   const img1      = ex.image_url_2 || '';
